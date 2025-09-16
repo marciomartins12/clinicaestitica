@@ -1,0 +1,717 @@
+<header>
+    <link rel="stylesheet" href="/css/pacientes.css">
+</header>
+
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-spa"></i> {{clinica.nome}}</h2>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/sistema/dashboard" class="nav-link"><i class="fas fa-home"></i>Inicio</a>
+            </li>
+            <li class="nav-item"><a href="/sistema/agenda" class="nav-link "><i
+                        class="fas fa-calendar-alt"></i>Agenda</a></li>
+            <li class="nav-item"><a href="/sistema/pacientes" class="nav-link active"><i
+                        class="fas fa-users"></i>Pacientes</a></li>
+            <li class="nav-item"><a href="/sistema/atendimento" class="nav-link"><i
+                        class="fas fa-user-md"></i>Atendimentos</a></li>
+            <li class="nav-item"><a href="/sistema/financeiro" class="nav-link"><i
+                        class="fas fa-dollar-sign"></i>Financeiro</a></li>
+            <li class="nav-item"><a href="/sistema/produtos" class="nav-link"><i class="fas fa-box"></i>Produtos</a>
+            </li>
+            <li class="nav-item"><a href="/sistema/minhaClinica" class="nav-link"><i
+                        class="fas fa-clinic-medical"></i>Minha Clínica</a></li>
+        </ul>
+
+        <!-- User Section -->
+        <div class="sidebar-user">
+            <div class="user-profile">
+                <div><i class="fa-solid fa-user"></i></div>
+                <div class="user-details">
+                    <div class="user-name-sidebar">{{user.nome}}</div>
+                    <div class="user-role">{{user.tipo_usuario}}</div>
+                </div>
+            </div>
+            <a href="/login" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content pacientes-container">
+        <!-- Header -->
+        <div class="pacientes-header">
+            <h1 class="pacientes-title">
+                <i class="fas fa-users"></i>
+                Gerenciar Pacientes
+            </h1>
+            <button class="btn btn-primary" onclick="openNewPatientModal()">
+                <i class="fas fa-user-plus"></i>
+                Novo Paciente
+            </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters-section">
+            <div class="filters-row">
+                <div class="form-group">
+                    <label class="form-label">Buscar por Nome, CPF ou Telefone</label>
+                    <input type="text" id="searchInput" class="form-input"
+                        placeholder="Digite o nome, CPF ou telefone...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ordenar por</label>
+                    <select id="sortBy" class="form-select">
+                        <option value="nome">Nome</option>
+                        <option value="data">Data de Cadastro</option>
+                        <option value="ultimaVisita">Última Visita</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="statusFilter" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-secondary" onclick="resetFilters()">
+                        <i class="fas fa-refresh"></i>
+                        Limpar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Pacientes -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3 class="table-title">
+                    <i class="fas fa-list"></i>
+                    Lista de Pacientes
+                </h3>
+                <span id="totalRecords" class="text-muted">Total: 0 pacientes</span>
+            </div>
+
+            <div id="loadingContainer" class="loading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Carregando pacientes...</p>
+            </div>
+
+            <div id="emptyContainer" class="empty-state" style="display: none;">
+                <i class="fas fa-user-times"></i>
+                <h3>Nenhum paciente encontrado</h3>
+                <p>Não há pacientes para os filtros selecionados.</p>
+            </div>
+
+            <div id="tableContainer" style="display: none;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>CPF</th>
+                            <th>Telefone</th>
+                            <th>Email</th>
+                            <th>Última Visita</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientsTableBody">
+                        <!-- Dados serão carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="paginationContainer" class="pagination" style="display: none;">
+                <!-- Paginação carregada via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Paciente -->
+<div id="newPatientModal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Novo Paciente</h3>
+            <button class="close-btn" onclick="closeNewPatientModal()">&times;</button>
+        </div>
+
+        <form id="patientForm">
+            <!-- Dados Pessoais -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nome Completo *</label>
+                    <input type="text" id="patientName" class="form-input" required
+                        placeholder="Digite o nome completo">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CPF *</label>
+                    <input type="text" id="patientCpf" class="form-input" data-format="cpf" required
+                        placeholder="000.000.000-00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Telefone *</label>
+                    <input type="text" id="patientPhone" class="form-input" data-format="phone" required
+                        placeholder="(00) 00000-0000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="patientEmail" class="form-input" placeholder="email@exemplo.com">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Data de Nascimento</label>
+                    <input type="date" id="patientBirthDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sexo</label>
+                    <select id="patientGender" class="form-select">
+                        <option value="">Selecione...</option>
+                        <option value="F">Feminino</option>
+                        <option value="M">Masculino</option>
+                        <option value="O">Outro</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <h4 style="margin: 20px 0 15px 0; color: #374151;">Endereço</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">CEP</label>
+                    <input type="text" id="patientCep" class="form-input" placeholder="00000-000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cidade</label>
+                    <input type="text" id="patientCity" class="form-input" placeholder="Nome da cidade">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Endereço Completo</label>
+                <input type="text" id="patientAddress" class="form-input" placeholder="Rua, número, bairro">
+            </div>
+
+            <!-- Informações Adicionais -->
+            <h4 style="margin: 20px 0 15px 0; color: #374151;">Informações Adicionais</h4>
+            <div class="form-group">
+                <label class="form-label">Como nos conheceu?</label>
+                <select id="patientSource" class="form-select">
+                    <option value="">Selecione...</option>
+                    <option value="indicacao">Indicação de amigo/cliente</option>
+                    <option value="redes-sociais">Redes Sociais</option>
+                    <option value="google">Pesquisa no Google</option>
+                    <option value="panfleto">Panfleto/Propaganda</option>
+                    <option value="passando">Passando na frente</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observações</label>
+                <textarea id="patientNotes" class="form-input" rows="3"
+                    placeholder="Informações importantes sobre o paciente..."></textarea>
+            </div>
+        </form>
+        
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeNewPatientModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" form="patientForm">Cadastrar Paciente</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Paciente -->
+<div id="editPatientModal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Editar Paciente</h3>
+            <button class="close-btn" onclick="closeEditPatientModal()">&times;</button>
+        </div>
+
+        <form id="editPatientForm">
+            <input type="hidden" id="editPatientId">
+
+            <!-- Dados Pessoais -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nome Completo *</label>
+                    <input type="text" id="editPatientName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CPF *</label>
+                    <input type="text" id="editPatientCpf" class="form-input" data-format="cpf" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Telefone *</label>
+                    <input type="text" id="editPatientPhone" class="form-input" data-format="phone" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="editPatientEmail" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Data de Nascimento</label>
+                    <input type="date" id="editPatientBirthDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="editPatientStatus" class="form-select">
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Observações</label>
+                <textarea id="editPatientNotes" class="form-input" rows="3"></textarea>
+            </div>
+        </form>
+        
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeEditPatientModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" form="editPatientForm">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/menuMobile.js"></script>
+<script>
+    // Variáveis globais
+        let filteredPatients = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let selectedPatientId = null;
+
+    // Inicializar página
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar busca e filtros
+        initializeSearch();
+
+        // Carregar dados iniciais
+        filterPatients();
+
+        // Event listeners para modais
+        setupModalEvents();
+    });
+
+    // Configurar eventos dos modais
+    function setupModalEvents() {
+        // Fechar modal ao clicar fora
+        document.getElementById('newPatientModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeNewPatientModal();
+            }
+        });
+
+        document.getElementById('editPatientModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeEditPatientModal();
+            }
+        });
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const newPatientModal = document.getElementById('newPatientModal');
+                const editPatientModal = document.getElementById('editPatientModal');
+
+                if (newPatientModal.classList.contains('show')) {
+                    closeNewPatientModal();
+                }
+                if (editPatientModal.classList.contains('show')) {
+                    closeEditPatientModal();
+                }
+            }
+        });
+    }
+
+    // Inicializar sistema de busca
+    function initializeSearch() {
+        // Event listener para busca
+        document.getElementById('searchInput').addEventListener('input', function () {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(filterPatients, 300);
+        });
+
+        // Event listeners para filtros
+        document.getElementById('sortBy').addEventListener('change', filterPatients);
+        document.getElementById('statusFilter').addEventListener('change', filterPatients);
+    }
+
+    // Buscar pacientes da API
+        function filterPatients(page = 1) {
+            mostrarLoading();
+            
+            const searchTerm = document.getElementById('searchInput').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            const params = new URLSearchParams({
+                page: page,
+                limit: itemsPerPage
+            });
+            
+            if (searchTerm) params.append('busca', searchTerm);
+            if (statusFilter) params.append('status', statusFilter);
+            if (sortBy) params.append('ordenar', sortBy);
+            
+            fetch(`/sistema/pacientes/api?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        filteredPatients = data.data;
+                        currentPage = data.pagination.currentPage;
+                        renderPatients();
+                        updatePaginationFromAPI(data.pagination);
+                        document.getElementById('totalRecords').textContent = `Total: ${data.pagination.totalRecords} pacientes`;
+                    } else {
+                        mostrarErro('Erro ao carregar pacientes');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    mostrarErro('Erro ao carregar pacientes');
+                });
+        }
+        
+        // Mostrar erro
+        function mostrarErro(mensagem) {
+            alert('❌ ' + mensagem);
+            mostrarVazio();
+        }
+
+    // Controles de exibição
+    function mostrarLoading() {
+        document.getElementById('loadingContainer').style.display = 'block';
+        document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('emptyContainer').style.display = 'none';
+        document.getElementById('paginationContainer').style.display = 'none';
+    }
+
+    function mostrarTabela() {
+        document.getElementById('loadingContainer').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'block';
+        document.getElementById('emptyContainer').style.display = 'none';
+        document.getElementById('paginationContainer').style.display = 'flex';
+    }
+
+    function mostrarVazio() {
+        document.getElementById('loadingContainer').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('emptyContainer').style.display = 'block';
+        document.getElementById('paginationContainer').style.display = 'none';
+    }
+
+    // Renderizar tabela de pacientes
+    function renderPatients() {
+        const tbody = document.getElementById('patientsTableBody');
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pagePatients = filteredPatients.slice(startIndex, endIndex);
+
+        if (filteredPatients.length === 0) {
+            mostrarVazio();
+            return;
+        }
+
+        tbody.innerHTML = filteredPatients.map(patient => {
+                const lastVisit = patient.atualizado_em ? new Date(patient.atualizado_em).toLocaleDateString('pt-BR') : 'Nunca';
+                
+                return `
+                    <tr>
+                        <td>${patient.nome}</td>
+                        <td>${patient.cpf}</td>
+                        <td>${patient.telefone || '-'}</td>
+                        <td>${patient.email || '-'}</td>
+                        <td>${lastVisit}</td>
+                        <td><span class="status-badge status-${patient.status}">${getStatusText(patient.status)}</span></td>
+                        <td>
+                            <div class="actions-group">
+                                <button class="btn btn-sm btn-warning" onclick="editPatient(${patient.id})" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deletePatient(${patient.id})" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            mostrarTabela();
+    }
+
+    // Funções auxiliares
+    function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    function calculateAge(birthDate) {
+        if (!birthDate) return '-';
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    function getGenderText(gender) {
+        const genderMap = {
+            'F': 'Feminino',
+            'M': 'Masculino',
+            'O': 'Outro'
+        };
+        return genderMap[gender] || '-';
+    }
+
+    function getStatusText(status) {
+            const statusMap = {
+                'ativo': 'Ativo',
+                'inativo': 'Inativo'
+            };
+            return statusMap[status] || status;
+        }
+
+    // Atualizar paginação com dados da API
+        function updatePaginationFromAPI(pagination) {
+            const container = document.getElementById('paginationContainer');
+            
+            if (pagination.totalPages <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            
+            // Botão anterior
+            html += `<button ${!pagination.hasPrev ? 'disabled' : ''} onclick="changePage(${pagination.currentPage - 1})">
+                <i class="fas fa-chevron-left"></i>
+            </button>`;
+            
+            // Páginas
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                if (i === pagination.currentPage || i === 1 || i === pagination.totalPages || (i >= pagination.currentPage - 1 && i <= pagination.currentPage + 1)) {
+                    html += `<button class="${i === pagination.currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+                } else if (i === pagination.currentPage - 2 || i === pagination.currentPage + 2) {
+                    html += '<span>...</span>';
+                }
+            }
+            
+            // Botão próximo
+            html += `<button ${!pagination.hasNext ? 'disabled' : ''} onclick="changePage(${pagination.currentPage + 1})">
+                <i class="fas fa-chevron-right"></i>
+            </button>`;
+            
+            container.innerHTML = html;
+            container.style.display = 'flex';
+        }
+        
+        // Mudar página
+        function changePage(page) {
+            filterPatients(page);
+        }
+
+    // Resetar filtros
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('sortBy').value = 'name';
+        document.getElementById('statusFilter').value = '';
+        filterPatients();
+    }
+
+    // Modal de novo paciente
+    function openNewPatientModal() {
+        const modal = document.getElementById('newPatientModal');
+        modal.style.display = 'flex';
+        resetPatientForm();
+    }
+
+    function closeNewPatientModal() {
+        const modal = document.getElementById('newPatientModal');
+        modal.style.display = 'none';
+    }
+
+    // Modal de editar paciente
+    function openEditPatientModal() {
+        const modal = document.getElementById('editPatientModal');
+        modal.style.display = 'flex';
+    }
+
+    function closeEditPatientModal() {
+        const modal = document.getElementById('editPatientModal');
+        modal.style.display = 'none';
+        selectedPatientId = null;
+    }
+
+    // Resetar formulário de paciente
+    function resetPatientForm() {
+        document.getElementById('patientForm').reset();
+    }
+
+    // Criar novo paciente
+        function createPatient(event) {
+            event.preventDefault();
+            
+            const formData = {
+                nome: document.getElementById('patientName').value,
+                cpf: document.getElementById('patientCpf').value,
+                telefone: document.getElementById('patientPhone').value,
+                email: document.getElementById('patientEmail').value,
+                data_nascimento: document.getElementById('patientBirthDate').value,
+                endereco: document.getElementById('patientAddress').value,
+                observacoes: document.getElementById('patientNotes').value
+            };
+            
+            fetch('/sistema/pacientes/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Paciente cadastrado com sucesso!');
+                    closeNewPatientModal();
+                    filterPatients();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('❌ Erro ao cadastrar paciente');
+            });
+        }
+        
+        // Editar paciente
+        function editPatient(patientId) {
+            selectedPatientId = patientId;
+            
+            // Buscar dados do paciente
+            fetch(`/sistema/pacientes/api/${patientId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const patient = data.data;
+                        
+                        // Preencher formulário de edição
+                        document.getElementById('editPatientId').value = patient.id;
+                        document.getElementById('editPatientName').value = patient.nome;
+                        document.getElementById('editPatientCpf').value = patient.cpf;
+                        document.getElementById('editPatientPhone').value = patient.telefone || '';
+                        document.getElementById('editPatientEmail').value = patient.email || '';
+                        document.getElementById('editPatientBirthDate').value = patient.data_nascimento || '';
+                        document.getElementById('editPatientStatus').value = patient.status;
+                        document.getElementById('editPatientNotes').value = patient.observacoes || '';
+                        
+                        openEditPatientModal();
+                    } else {
+                        alert('❌ Erro ao carregar dados do paciente');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('❌ Erro ao carregar paciente');
+                });
+        }
+        
+        // Salvar edição do paciente
+        function updatePatient(event) {
+            event.preventDefault();
+            
+            const patientId = document.getElementById('editPatientId').value;
+            const formData = {
+                nome: document.getElementById('editPatientName').value,
+                cpf: document.getElementById('editPatientCpf').value,
+                telefone: document.getElementById('editPatientPhone').value,
+                email: document.getElementById('editPatientEmail').value,
+                data_nascimento: document.getElementById('editPatientBirthDate').value,
+                status: document.getElementById('editPatientStatus').value,
+                observacoes: document.getElementById('editPatientNotes').value
+            };
+            
+            fetch(`/sistema/pacientes/api/${patientId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Paciente atualizado com sucesso!');
+                    closeEditPatientModal();
+                    filterPatients();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('❌ Erro ao atualizar paciente');
+            });
+        }
+        
+        // Excluir paciente
+        function deletePatient(patientId) {
+            const confirmacao = confirm('🗑️ EXCLUIR PACIENTE\n\n⚠️ Esta ação irá desativar o paciente!\n\nTem certeza que deseja continuar?\n\n✅ OK = Excluir\n❌ Cancelar = Manter');
+            
+            if (!confirmacao) return;
+            
+            fetch(`/sistema/pacientes/api/${patientId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Paciente desativado com sucesso!');
+                    filterPatients();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('❌ Erro ao excluir paciente');
+            });
+         }
+
+        // Event listeners para formulários
+        document.getElementById('patientForm').addEventListener('submit', createPatient);
+        document.getElementById('editPatientForm').addEventListener('submit', updatePatient);
+</script>

@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 
 const { Usuario: usuarioModel, Clinica: clinicaModel } = require('../models');
 
-class authLogin {
+class authController {
     static async pageLogin(req, res) {
         clinicaModel.findOne({
             where: {
@@ -64,4 +64,4 @@ class authLogin {
 
 }
 
-module.exports = authLogin;
+module.exports = authController;

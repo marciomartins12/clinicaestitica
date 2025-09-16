@@ -120,7 +120,7 @@ app.use(flash());
 //rotas e controllers
 const router = express.Router();
 const rotasSistema = require('./routes/sistema');
-const controllerAuth = require('./controllers/authLogin');
+const controllerAuth = require('./controllers/authController');
 //usando rotas
 router.get("/", controllerAuth.pageLogin);
 router.post('/tryLogin', controllerAuth.tryLogin);
