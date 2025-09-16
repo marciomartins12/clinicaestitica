@@ -1,0 +1,177 @@
+<div class="container-fluid vh-100">
+    <div class="row h-100">
+        <!-- Seção de Boas-vindas - Oculta em mobile -->
+        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center welcome-section text-white">
+            <div class="text-center px-4">
+                <div class="welcome-icon mb-4">
+                    <i class="fas fa-anchor fa-3x mb-2"></i>
+                    <i class="fas fa-fish fa-2x mx-2"></i>
+                    <i class="fas fa-ship fa-3x mb-2"></i>
+                </div>
+                <h1 class="display-6 fw-bold mb-3">{{nomeclinica}}</h1> 
+                <h3 class="h4 text-light mb-4">{{cidade}}</h3>
+                
+                <div class="welcome-info">
+                    <div class="info-item mb-3">
+                        <i class="fas fa-waves me-2"></i>
+                        <span>Beleza e saúde</span>
+                    </div>
+                    <div class="info-item mb-3">
+                        <i class="fas fa-handshake me-2"></i>
+                        <span>União, força e tradição</span>
+                    </div>
+                    <div class="info-item mb-4">
+                        <i class="fas fa-chart-line me-2"></i>
+                        <span>Gestão moderna e transparente</span>
+                    </div>
+                </div>
+                
+                <div class="welcome-stats">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-number">2000+</div>
+                            <div class="stat-label">Clientes</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">4+</div>
+                            <div class="stat-label">Anos</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">100%</div>
+                            <div class="stat-label">Digital</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Informações de Contato -->
+                <div class="contact-info mt-4 pt-4 ">
+                    <div class="contact-item mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        <span class="small">{{endereco}}</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone me-2"></i>
+                        <span class="small">{{telefone}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Login -->
+        <div class="col-12 col-lg-6 d-flex align-items-center justify-content-center login-page p-3 p-lg-0">
+            <div class="login-form w-100" style="max-width: 450px;">
+                <!-- Logo mobile -->
+                <div class="text-center mb-4 d-lg-none mobile-header">
+                    <div class="mobile-icons mb-3">
+                        <i class="fas fa-anchor fa-2x text-white me-2"></i>
+                        <i class="fas fa-fish fa-lg text-white-50 mx-1"></i>
+                        <i class="fas fa-ship fa-2x text-white ms-2"></i>
+                    </div>
+                    <h2 class="text-white fw-bold">{{nomeclinica}}</h2>
+                    
+                    <!-- Informações de contato ocultas no mobile, mantendo apenas o título -->
+                    <div class="d-none d-lg-block contact-info-mobile mt-3 pt-3 border-top border-light border-opacity-25">
+                        <div class="contact-item-mobile mb-1">
+                            <i class="fas fa-map-marker-alt me-2 text-white-50"></i>
+                            <span class="text-white-50 small">{{endereco}}</span>
+                        </div>
+                        <div class="contact-item-mobile">
+                            <i class="fas fa-phone me-2 text-white-50"></i>
+                            <span class="text-white-50 small">{{telefone}}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card shadow border-0">
+                    <div class="card-body p-4 p-sm-5">
+                        <div class="text-center mb-4">
+                            <div class="login-icon mb-3">
+                                <i class="fas fa-anchor text-primary fa-2x"></i>
+                            </div>
+                            <h3 class="card-title mb-2">
+                                <i class="fas fa-sign-in-alt me-2 text-primary"></i>
+                                Acesso ao Sistema
+                            </h3>
+                            <p class="text-muted small">Faça login para acessar sua área</p>
+                        </div>
+                        
+                        {{#if error}}
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {{error}}
+                        </div>
+                        {{/if}}
+                        
+                        <form method="POST" action="/tryLogin">
+                            
+                            <!-- Campo Email (para funcionários) -->
+                            <div class="mb-3" id="campo-email">
+                                <label for="email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" placeholder="Digite seu email" id="email" name="email">
+                                </div>
+                            </div>
+                             <div class="mb-2">
+                                <label for="senha" class="form-label">Senha</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" placeholder="Digite sua senha" id="senha" name="senha" required>
+                                </div>
+                            </div>
+                       
+                            {{{LoginError}}}
+                            
+                            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Entrar
+                            </button>
+                           
+                        </form>
+                        
+                        <!-- Removido o crédito daqui -->
+                    </div>
+                </div>
+                
+                <!-- Crédito do desenvolvedor fora do container branco -->
+                <div class="text-center mt-4">
+                    <p class="developer-credit ">
+                        Sistema desenvolvido por <a href="https://www.instagram.com/marciomartins_12" target="_blank" rel="noopener noreferrer">@marciomartins_12</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+
+
+// Validação do formulário
+document.querySelector('form').addEventListener('submit', function(e) {
+    const email = document.getElementById('email').value;
+   
+    const senha = document.getElementById('senha').value;
+    
+    
+    
+    
+    if (!email) {
+        e.preventDefault();
+        alert('Por favor, digite seu email.');
+        return;
+    }
+    
+    if (!senha) {
+        e.preventDefault();
+        alert('Por favor, digite sua senha.');
+        return;
+    }
+});
+</script>

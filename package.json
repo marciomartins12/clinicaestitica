@@ -1,0 +1,31 @@
+{
+  "name": "s_clinica",
+  "version": "1.0.0",
+  "description": "Sistema de gerenciamento clinicas",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-flash": "^0.0.2",
+    "express-handlebars": "^7.1.2",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.17.3",
+    "helmet": "^8.1.0",
+    "moment": "^2.29.4",
+    "mysql2": "^3.6.5",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "author": "@marciomartins_12",
+  "license": "ISC"
+}

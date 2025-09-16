@@ -1,0 +1,476 @@
+<head>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+       
+    </style>
+</head>
+
+
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-spa"></i> Bella Estética</h2>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-home"></i>Inicio</a></li>
+            <li class="nav-item"><a href="/sistema/agenda" class="nav-link"><i class="fas fa-calendar-alt"></i>Agenda</a></li>
+            <li class="nav-item"><a href="/sistema/pacientes" class="nav-link"><i class="fas fa-users"></i>Pacientes</a></li>
+            <li class="nav-item"><a href="/sistema/atendimento" class="nav-link"><i class="fas fa-user-md"></i>Atendimentos</a>
+            </li>
+            <li class="nav-item"><a href="/sistema/financeiro" class="nav-link"><i class="fas fa-dollar-sign"></i>Financeiro</a>
+            </li>
+            <li class="nav-item"><a href="/sistema/produtos" class="nav-link"><i class="fas fa-box"></i>Produtos</a></li>
+            <li class="nav-item"><a href="/sistema/minhaClinica" class="nav-link"><i class="fas fa-clinic-medical"></i>Minha
+                    Clínica</a></li>
+        </ul>
+
+        <!-- User Section -->
+        <div class="sidebar-user">
+            <div class="user-profile">
+                <div><i class="fa-solid fa-user"></i></div>
+                <div class="user-details">
+                    <div class="user-name-sidebar">{{user.nome}}</div>
+                    <div class="user-role">{{user.cargo}}</div>
+                </div>
+            </div>
+            <a href="/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <div class="welcome-text">
+                <h1>Olá, {{user.nome}}! 😊</h1>
+                <p>Bem-vindo de volta ao seu painel de controle</p>
+            </div>
+            <div class="user-info">
+
+                <span>{{user.nome}}</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="action-card" onclick="window.location.href='agenda'">
+                <i class="fas fa-calendar-alt"></i>
+                <h3>Novo Agendamento</h3>
+                <p>Agendar consulta</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='produtos'">
+                <i class="fas fa-box"></i>
+                <h3>Novo Produto</h3>
+                <p>Produto, procedimento e remédio</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='pacientes'">
+                <i class="fas fa-user-plus"></i>
+                <h3>Adicionar Paciente</h3>
+                <p>Adicionar dados de novo paciente</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='atendimentos'"> 
+                <i class="fas fa-user-md"></i>
+                <h3>Atendimentos</h3>
+                <p> Verificar atendimentos</p>
+            </div>
+        </div>
+
+        <!-- Calendar and Stats Section -->
+        <div class="calendar-stats-grid">
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <h3 class="calendar-title"><i class="fas fa-calendar-alt"
+                            style="margin-right: 10px; color: #2563eb;"></i>Agenda - Setembro 2025</h3>
+                    <div class="calendar-nav">
+                        <button class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                        <span class="current-month">Setembro 2025</span>
+                        <button class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+
+                    </div>
+                </div>
+
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Dom</div>
+                    <div class="calendar-day-header">Seg</div>
+                    <div class="calendar-day-header">Ter</div>
+                    <div class="calendar-day-header">Qua</div>
+                    <div class="calendar-day-header">Qui</div>
+                    <div class="calendar-day-header">Sex</div>
+                    <div class="calendar-day-header">Sáb</div>
+
+                    <!-- Dias do mês anterior -->
+                    <div class="calendar-day other-month">
+                        <div class="day-number">31</div>
+                    </div>
+
+                    <!-- Dias do mês atual -->
+                    <div class="calendar-day">
+                        <div class="day-number">1</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">2</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">3</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">4</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">5</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">6</div>
+                    </div>
+
+                    <div class="calendar-day">
+                        <div class="day-number">7</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">8</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">9</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">10</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">11</div>
+                    </div>
+                    <div class="calendar-day has-appointment">
+                        <div class="day-number">12</div>
+                        <div class="appointment-dot blue"></div>
+                        <div class="appointment-dot green"></div>
+                        <div class="appointment-time">09:00, 14:30</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">13</div>
+                    </div>
+
+                    <div class="calendar-day">
+                        <div class="day-number">14</div>
+                    </div>
+                    <div class="calendar-day today">
+                        <div class="day-number">15</div>
+                        <div class="appointment-dot blue"></div>
+                        <div class="appointment-time">10:00</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">16</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">17</div>
+                    </div>
+                    <div class="calendar-day has-appointment">
+                        <div class="day-number">18</div>
+                        <div class="appointment-dot red"></div>
+                        <div class="appointment-time">16:00</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">19</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">20</div>
+                    </div>
+
+                    <div class="calendar-day">
+                        <div class="day-number">21</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">22</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">23</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">24</div>
+                    </div>
+                    <div class="calendar-day has-appointment">
+                        <div class="day-number">25</div>
+                        <div class="appointment-dot purple"></div>
+                        <div class="appointment-dot blue"></div>
+                        <div class="appointment-dot green"></div>
+                        <div class="appointment-time">08:30, 11:00, 15:30</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">26</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">27</div>
+                    </div>
+
+                    <div class="calendar-day">
+                        <div class="day-number">28</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">29</div>
+                    </div>
+                    <div class="calendar-day">
+                        <div class="day-number">30</div>
+                    </div>
+
+                    <!-- Dias do próximo mês -->
+                    <div class="calendar-day other-month">
+                        <div class="day-number">1</div>
+                    </div>
+                    <div class="calendar-day other-month">
+                        <div class="day-number">2</div>
+                    </div>
+                    <div class="calendar-day other-month">
+                        <div class="day-number">3</div>
+                    </div>
+                    <div class="calendar-day other-month">
+                        <div class="day-number">4</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Card -->
+            <div class="stats-card">
+                <div class="stats-header">
+                    <h3><i class="fas fa-sticky-note" style="margin-right: 10px; color: #6b46c1;"></i>Recados</h3>
+                </div>
+
+                <!-- Lista de Recados -->
+                <div class="recados-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+                    {{#if recados}}
+                        {{#each recados}}
+                        <div class="recado-item" data-id="{{this.id}}" style="padding: 10px; margin-bottom: 8px; border-radius: 8px; border-left: 4px solid {{#eq this.tipo 'urgente'}}#ef4444{{/eq}}{{#eq this.tipo 'aviso'}}#f59e0b{{/eq}}{{#eq this.tipo 'info'}}#3b82f6{{/eq}}{{#eq this.tipo 'sucesso'}}#10b981{{/eq}}; background: {{#eq this.tipo 'urgente'}}#fef2f2{{/eq}}{{#eq this.tipo 'aviso'}}#fffbeb{{/eq}}{{#eq this.tipo 'info'}}#eff6ff{{/eq}}{{#eq this.tipo 'sucesso'}}#f0fdf4{{/eq}};">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+                                <div style="flex: 1;">
+                                    <h5 style="margin: 0; font-size: 14px; font-weight: 600; color: #1f2937;">{{this.titulo}}</h5>
+                                    <p style="margin: 5px 0; font-size: 12px; color: #6b7280; line-height: 1.4;">{{this.mensagem}}</p>
+                                </div>
+                                <div style="display: flex; gap: 5px; margin-left: 10px;">
+                                    {{#if (and (not this.lido) (not this.publico))}}
+                                    <button onclick="marcarComoLido({{this.id}})" style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 12px;" title="Marcar como lido">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {{/if}}
+                                    {{#if (or (eq ../user.id this.autor_id) (eq ../user.tipo_usuario 'admin'))}}
+                                    <button onclick="desativarRecado({{this.id}})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px;" title="Remover recado">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {{/if}}
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #9ca3af;">
+                                <span>Por: {{this.autor.nome}}</span>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span class="prioridade-badge" style="padding: 2px 6px; border-radius: 4px; background: {{#eq this.prioridade 'alta'}}#fecaca{{/eq}}{{#eq this.prioridade 'media'}}#fed7aa{{/eq}}{{#eq this.prioridade 'baixa'}}#d1fae5{{/eq}}; color: {{#eq this.prioridade 'alta'}}#991b1b{{/eq}}{{#eq this.prioridade 'media'}}#9a3412{{/eq}}{{#eq this.prioridade 'baixa'}}#065f46{{/eq}};">{{this.prioridade}}</span>
+                                    {{#unless this.publico}}<i class="fas fa-user" title="Recado privado"></i>{{/unless}}
+                                    {{#unless this.lido}}<i class="fas fa-circle" style="color: #3b82f6; font-size: 6px;" title="Não lido"></i>{{/unless}}
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    {{else}}
+                        <div style="text-align: center; color: #6b7280; padding: 20px;">
+                            <i class="fas fa-inbox" style="font-size: 24px; margin-bottom: 10px;"></i>
+                            <p>Nenhum recado encontrado</p>
+                        </div>
+                    {{/if}}
+                </div>
+
+                <div style="text-align: center; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+                    <button class="btn btn-primary" onclick="abrirModalRecado()" style="background: #6b46c1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                        <i class="fas fa-plus" style="margin-right: 5px;"></i>
+                        Adicionar Recado
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<!-- Modal para Criar Recado -->
+<div id="modalRecado" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #1f2937;"><i class="fas fa-sticky-note" style="margin-right: 10px; color: #6b46c1;"></i>Novo Recado</h3>
+            <button onclick="fecharModalRecado()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6b7280;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form action="/sistema/recados" method="POST" id="formRecado">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Título *</label>
+                <input type="text" name="titulo" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;" placeholder="Digite o título do recado">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Mensagem *</label>
+                <textarea name="mensagem" required rows="4" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; resize: vertical;" placeholder="Digite a mensagem do recado"></textarea>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Tipo</label>
+                    <select name="tipo" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        <option value="info">📘 Informação</option>
+                        <option value="aviso">⚠️ Aviso</option>
+                        <option value="urgente">🚨 Urgente</option>
+                        <option value="sucesso">✅ Sucesso</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Prioridade</label>
+                    <select name="prioridade" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        <option value="baixa">🟢 Baixa</option>
+                        <option value="media" selected>🟡 Média</option>
+                        <option value="alta">🔴 Alta</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" name="publico" value="true" checked style="width: 16px; height: 16px;">
+                    <span style="font-weight: 600; color: #374151;">Recado público (visível para todos)</span>
+                </label>
+            </div>
+            
+            <div id="destinatarioDiv" style="margin-bottom: 15px; display: none;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Destinatário</label>
+                <select name="destinatario_id" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                    <option value="">Selecione um usuário</option>
+                    {{#each usuarios}}
+                    <option value="{{this.id}}">{{this.nome}} ({{this.tipo_usuario}})</option>
+                    {{/each}}
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #374151;">Data de Expiração (opcional)</label>
+                <input type="datetime-local" name="data_expiracao" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="fecharModalRecado()" style="padding: 10px 20px; border: 1px solid #d1d5db; background: white; color: #374151; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    Cancelar
+                </button>
+                <button type="submit" style="padding: 10px 20px; background: #6b46c1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    <i class="fas fa-save" style="margin-right: 5px;"></i>
+                    Salvar Recado
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/menuMobile.js"></script>
+<script>
+// Funções para o modal de recados
+function abrirModalRecado() {
+    document.getElementById('modalRecado').style.display = 'flex';
+}
+
+function fecharModalRecado() {
+    document.getElementById('modalRecado').style.display = 'none';
+    document.getElementById('formRecado').reset();
+    document.getElementById('destinatarioDiv').style.display = 'none';
+}
+
+// Toggle destinatário baseado no checkbox público
+document.querySelector('input[name="publico"]').addEventListener('change', function() {
+    const destinatarioDiv = document.getElementById('destinatarioDiv');
+    if (this.checked) {
+        destinatarioDiv.style.display = 'none';
+    } else {
+        destinatarioDiv.style.display = 'block';
+    }
+});
+
+// Marcar recado como lido
+function marcarComoLido(id) {
+    fetch(`/sistema/recados/${id}/lido`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao marcar recado como lido');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao marcar recado como lido');
+    });
+}
+
+// Desativar recado
+function desativarRecado(id) {
+    if (confirm('Tem certeza que deseja remover este recado?')) {
+        fetch(`/sistema/recados/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao remover recado');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao remover recado');
+        });
+    }
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modalRecado').addEventListener('click', function(e) {
+    if (e.target === this) {
+        fecharModalRecado();
+    }
+});
+
+// Mostrar mensagens flash
+{{#if success}}
+    {{#each success}}
+    setTimeout(() => {
+        alert('✅ {{this}}');
+    }, 100);
+    {{/each}}
+{{/if}}
+
+{{#if error}}
+    {{#each error}}
+    setTimeout(() => {
+        alert('❌ {{this}}');
+    }, 100);
+    {{/each}}
+{{/if}}
+</script>
