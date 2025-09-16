@@ -16,15 +16,31 @@ const Anamnese = sequelize.define('Anamnese', {
             key: 'id'
         }
     },
+    queixa_principal: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    historia_doenca: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    antecedentes_pessoais: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    medicamentos_uso: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    exame_fisico: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
     historico_familiar: {
         type: DataTypes.TEXT,
         allowNull: true
     },
     doencas_preexistentes: {
-        type: DataTypes.TEXT,
-        allowNull: true
-    },
-    medicamentos_uso: {
         type: DataTypes.TEXT,
         allowNull: true
     },

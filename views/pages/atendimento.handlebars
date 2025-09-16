@@ -1,0 +1,225 @@
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-spa"></i> {{clinica.nome}}</h2>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/sistema/dashboard" class="nav-link"><i class="fas fa-home"></i>Inicio</a></li>
+            <li class="nav-item"><a href="/sistema/agenda" class="nav-link"><i class="fas fa-calendar-alt"></i>Agenda</a></li>
+            <li class="nav-item"><a href="/sistema/pacientes" class="nav-link"><i class="fas fa-users"></i>Pacientes</a></li>
+            <li class="nav-item"><a href="/sistema/atendimento" class="nav-link active"><i class="fas fa-user-md"></i>Atendimentos</a></li>
+            <li class="nav-item"><a href="/sistema/financeiro" class="nav-link"><i class="fas fa-dollar-sign"></i>Financeiro</a></li>
+            <li class="nav-item"><a href="/sistema/produtos" class="nav-link"><i class="fas fa-box"></i>Produtos</a></li>
+            <li class="nav-item"><a href="/sistema/minhaClinica" class="nav-link"><i class="fas fa-clinic-medical"></i>Minha Clínica</a></li>
+        </ul>
+
+        <!-- User Section -->
+        <div class="sidebar-user">
+            <div class="user-profile">
+                <div><i class="fa-solid fa-user"></i></div>
+                <div class="user-details">
+                    <div class="user-name-sidebar">{{user.nome}}</div>
+                    <div class="user-role">{{user.tipo_usuario}}</div>
+                </div>
+            </div>
+            <a href="/sistema/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="atendimento-header">
+            <h1 class="atendimento-title">
+                <i class="fas fa-user-md"></i>
+                Atendimentos
+            </h1>
+            <p class="atendimento-subtitle">Selecione um paciente para iniciar o atendimento</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="atendimento-search-section">
+            <div class="search-card">
+                <div class="search-header">
+                    <h3><i class="fas fa-search"></i> Buscar Paciente</h3>
+                    <p>Digite o nome, CPF ou telefone do paciente</p>
+                </div>
+
+                <div class="search-form">
+                    <div class="search-input-group">
+                        <input type="text" id="searchPatient" class="search-input" placeholder="Digite o nome, CPF ou telefone do paciente...">
+                        <button class="search-btn" onclick="searchPatients()">
+                            <i class="fas fa-search"></i>
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-state" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Buscando pacientes...</span>
+                </div>
+
+                <!-- Results Section -->
+                <div id="searchResults" class="search-results" style="display: none;">
+                    <h4><i class="fas fa-list"></i> Resultados da Busca</h4>
+                    <div id="patientsList" class="patients-list">
+                        <!-- Pacientes serão carregados aqui via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="fas fa-user-slash"></i>
+                    <h4>Nenhum paciente encontrado</h4>
+                    <p>Tente buscar com outros termos ou verifique se o paciente está cadastrado.</p>
+                    <button class="btn btn-primary" onclick="window.location.href='/sistema/pacientes'">
+                        <i class="fas fa-user-plus"></i>
+                        Cadastrar Novo Paciente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<link rel="stylesheet" href="/css/atendimento.css">
+
+<!-- JavaScript -->
+<script src="/js/menuMobile.js"></script>
+<script>
+let searchTimeout;
+
+// Função para buscar pacientes
+function searchPatients() {
+    const searchTerm = document.getElementById('searchPatient').value.trim();
+    
+    if (searchTerm.length < 2) {
+        alert('Digite pelo menos 2 caracteres para buscar');
+        return;
+    }
+    
+    showLoading();
+    
+    // Simular delay de busca
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        fetch(`/sistema/pacientes/selecao?busca=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success && data.data.length > 0) {
+                    displayResults(data.data);
+                } else {
+                    showEmptyState();
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Erro:', error);
+                alert('Erro ao buscar pacientes');
+            });
+    }, 500);
+}
+
+// Função para exibir loading
+function showLoading() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+}
+
+// Função para esconder loading
+function hideLoading() {
+    document.getElementById('loadingState').style.display = 'none';
+}
+
+// Função para exibir resultados
+function displayResults(patients) {
+    const patientsList = document.getElementById('patientsList');
+    
+    patientsList.innerHTML = patients.map(patient => `
+        <div class="patient-card" onclick="selectPatient(${patient.id})">
+            <div class="patient-info">
+                <div class="patient-details">
+                    <h5>${patient.nome}</h5>
+                    <p><i class="fas fa-id-card"></i> CPF: ${patient.cpf}</p>
+                    <p><i class="fas fa-phone"></i> Telefone: ${patient.telefone || 'Não informado'}</p>
+                    <p><i class="fas fa-envelope"></i> Email: ${patient.email || 'Não informado'}</p>
+                </div>
+                <div class="patient-actions">
+                    <button class="btn-atender" onclick="event.stopPropagation(); startAttendance(${patient.id})">
+                        <i class="fas fa-user-md"></i>
+                        Atender
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('searchResults').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+}
+
+// Função para exibir estado vazio
+function showEmptyState() {
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+}
+
+// Função para selecionar paciente
+function selectPatient(patientId) {
+    startAttendance(patientId);
+}
+
+// Função para iniciar atendimento
+function startAttendance(patientId) {
+    // Redirecionar para a página de atendimento do paciente
+    window.location.href = `/sistema/atendimento/${patientId}`;
+}
+
+// Event listener para busca em tempo real
+document.getElementById('searchPatient').addEventListener('input', function() {
+    const searchTerm = this.value.trim();
+    
+    if (searchTerm.length >= 2) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            searchPatients();
+        }, 800);
+    } else {
+        // Limpar resultados se o termo for muito curto
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('loadingState').style.display = 'none';
+    }
+});
+
+// Event listener para Enter
+document.getElementById('searchPatient').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        searchPatients();
+    }
+});
+
+// Focar no campo de busca ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('searchPatient').focus();
+});
+</script>

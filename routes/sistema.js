@@ -3,6 +3,7 @@ const router = Router();
 const authController = require('../controllers/authController');
 const RecadoController = require('../controllers/recadoController');
 const AgendamentoController = require('../controllers/agendamentoController');
+const AtendimentoController = require('../controllers/atendimentoController');
 const { Usuario, Clinica } = require('../models');
 const PacienteController = require('../controllers/pacienteController');
 
@@ -99,6 +100,79 @@ router.get('/pacientes/api/:id', authController.isLoggedIn, PacienteController.b
 router.put('/pacientes/api/:id', authController.isLoggedIn, PacienteController.atualizarPaciente);
 router.delete('/pacientes/api/:id', authController.isLoggedIn, PacienteController.excluirPaciente);
 router.get('/pacientes/selecao', authController.isLoggedIn, PacienteController.buscarPacientesParaSelecao);
+
+// Rotas para atendimento - APIs
+router.post('/atendimento/anamnese', authController.isLoggedIn, AtendimentoController.salvarAnamnese);
+router.get('/atendimento/anamnese/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarAnamnese);
+router.post('/atendimento/atestado', authController.isLoggedIn, AtendimentoController.salvarAtestado);
+router.get('/atendimento/atestados/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarAtestados);
+router.post('/atendimento/exame', authController.isLoggedIn, AtendimentoController.salvarExame);
+router.get('/atendimento/exames/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarExames);
+router.put('/atendimento/exame/status', authController.isLoggedIn, AtendimentoController.atualizarStatusExame);
+router.put('/atendimento/exame/resultado', authController.isLoggedIn, AtendimentoController.salvarResultadosExame);
+router.post('/atendimento/foto', authController.isLoggedIn, AtendimentoController.salvarFoto);
+router.get('/atendimento/fotos/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarFotos);
+router.post('/atendimento/prescricao', authController.isLoggedIn, AtendimentoController.salvarPrescricao);
+router.get('/atendimento/prescricoes/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarPrescricoes);
+router.get('/atendimento/historico/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarHistorico);
+router.get('/atendimento/medicamentos', authController.isLoggedIn, AtendimentoController.buscarMedicamentos);
+router.post('/atendimento/finalizar/:pacienteId', authController.isLoggedIn, AtendimentoController.finalizarAtendimento);
+
+// Rota para atendimento
+router.get('/atendimento', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = req.session.user;
+        
+        // Buscar dados da clínica
+        const clinica = await Clinica.findOne();
+        
+        res.render('pages/atendimento', {
+            user: user,
+            clinica: clinica || { nome: 'Clínica' },
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar página de atendimento:', error);
+        res.render('pages/atendimento', {
+            user: req.session.user,
+            clinica: { nome: 'Clínica' },
+            error: ['Erro ao carregar página de atendimento']
+        });
+    }
+});
+
+// Rota para atendimento específico do paciente
+router.get('/atendimento/:id', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = req.session.user;
+        const pacienteId = req.params.id;
+        
+        // Buscar dados da clínica
+        const clinica = await Clinica.findOne();
+        
+        // Buscar dados do paciente
+        const { Paciente } = require('../models');
+        const paciente = await Paciente.findByPk(pacienteId);
+        
+        if (!paciente) {
+            req.flash('error', 'Paciente não encontrado');
+            return res.redirect('/sistema/atendimento');
+        }
+        
+        res.render('pages/atendimento-paciente', {
+            user: user,
+            clinica: clinica || { nome: 'Clínica' },
+            paciente: paciente,
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar atendimento do paciente:', error);
+        req.flash('error', 'Erro ao carregar atendimento do paciente');
+        res.redirect('/sistema/atendimento');
+    }
+});
 
 
 module.exports = router;

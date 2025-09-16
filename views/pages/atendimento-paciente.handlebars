@@ -1,0 +1,1471 @@
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-spa"></i> {{clinica.nome}}</h2>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/sistema/dashboard" class="nav-link"><i class="fas fa-home"></i>Inicio</a></li>
+            <li class="nav-item"><a href="/sistema/agenda" class="nav-link"><i class="fas fa-calendar-alt"></i>Agenda</a></li>
+            <li class="nav-item"><a href="/sistema/pacientes" class="nav-link"><i class="fas fa-users"></i>Pacientes</a></li>
+            <li class="nav-item"><a href="/sistema/atendimento" class="nav-link active"><i class="fas fa-user-md"></i>Atendimentos</a></li>
+            <li class="nav-item"><a href="/sistema/financeiro" class="nav-link"><i class="fas fa-dollar-sign"></i>Financeiro</a></li>
+            <li class="nav-item"><a href="/sistema/produtos" class="nav-link"><i class="fas fa-box"></i>Produtos</a></li>
+            <li class="nav-item"><a href="/sistema/minhaClinica" class="nav-link"><i class="fas fa-clinic-medical"></i>Minha Clínica</a></li>
+        </ul>
+
+        <!-- User Section -->
+        <div class="sidebar-user">
+            <div class="user-profile">
+                <div><i class="fa-solid fa-user"></i></div>
+                <div class="user-details">
+                    <div class="user-name-sidebar">{{user.nome}}</div>
+                    <div class="user-role">{{user.tipo_usuario}}</div>
+                </div>
+            </div>
+            <a href="/sistema/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Patient Header -->
+        <div class="patient-header">
+            <div class="patient-info">
+                <div class="patient-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="patient-details">
+                    <h1 id="patientName">{{paciente.nome}}</h1>
+                    <div class="patient-meta">
+                        <span><i class="fas fa-id-card"></i> CPF: {{paciente.cpf}}</span>
+                        <span><i class="fas fa-phone"></i> {{paciente.telefone}}</span>
+                        <span><i class="fas fa-envelope"></i> {{paciente.email}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="patient-actions">
+                <button class="btn btn-secondary" onclick="window.location.href='/sistema/atendimento'">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar
+                </button>
+                <button class="btn btn-success" onclick="finalizarAtendimento()">
+                    <i class="fas fa-check"></i>
+                    Finalizar Atendimento
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-container">
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="openTab(event, 'anamnese')">
+                    <i class="fas fa-clipboard-list"></i>
+                    Anamnese
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'atestado')">
+                    <i class="fas fa-file-medical"></i>
+                    Atestado
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'exames')">
+                    <i class="fas fa-vial"></i>
+                    Exames
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'fotos')">
+                    <i class="fas fa-camera"></i>
+                    Fotos
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'historico')">
+                    <i class="fas fa-history"></i>
+                    Histórico
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'prescricao')">
+                    <i class="fas fa-prescription"></i>
+                    Prescrição
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tabs-content">
+                <!-- Anamnese Tab -->
+                <div id="anamnese" class="tab-content active">
+                    <div class="content-header">
+                        <h3><i class="fas fa-clipboard-list"></i> Anamnese</h3>
+                        <div class="content-actions">
+                            <button class="btn btn-primary" onclick="salvarAnamnese()">
+                                <i class="fas fa-save"></i>
+                                Salvar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="anamnese-form">
+                        <div class="form-section">
+                            <h4>Queixa Principal</h4>
+                            <textarea id="queixaPrincipal" class="form-textarea" placeholder="Descreva a queixa principal do paciente..."></textarea>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h4>História da Doença Atual</h4>
+                            <textarea id="historiaDoenca" class="form-textarea" placeholder="Descreva a história da doença atual..."></textarea>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h4>Antecedentes Pessoais</h4>
+                            <textarea id="antecedentesPessoais" class="form-textarea" placeholder="Antecedentes médicos, cirúrgicos, alergias..."></textarea>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h4>Medicamentos em Uso</h4>
+                            <textarea id="medicamentosUso" class="form-textarea" placeholder="Liste os medicamentos que o paciente está usando..."></textarea>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h4>Exame Físico</h4>
+                            <textarea id="exameFisico" class="form-textarea" placeholder="Descreva os achados do exame físico..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Atestado Tab -->
+                <div id="atestado" class="tab-content">
+                    <div class="content-header">
+                        <h3><i class="fas fa-file-medical"></i> Atestado Médico</h3>
+                        <div class="content-actions">
+                            <button class="btn btn-secondary" onclick="novoAtestado()">
+                                <i class="fas fa-plus"></i>
+                                Novo
+                            </button>
+                            <button class="btn btn-primary" onclick="salvarAtestado()">
+                                <i class="fas fa-save"></i>
+                                Salvar
+                            </button>
+                            <button class="btn btn-success" onclick="imprimirAtestado()">
+                                <i class="fas fa-print"></i>
+                                Imprimir
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="atestado-editor">
+                        <div class="editor-toolbar">
+                            <button onclick="formatText('bold')"><i class="fas fa-bold"></i></button>
+                            <button onclick="formatText('italic')"><i class="fas fa-italic"></i></button>
+                            <button onclick="formatText('underline')"><i class="fas fa-underline"></i></button>
+                            <select onchange="changeFontSize(this.value)">
+                                <option value="12">12px</option>
+                                <option value="14" selected>14px</option>
+                                <option value="16">16px</option>
+                                <option value="18">18px</option>
+                            </select>
+                        </div>
+                        
+                        <div id="atestadoContent" class="atestado-content" contenteditable="true">
+                            <div class="atestado-header">
+                                <h2>ATESTADO MÉDICO</h2>
+                                <p><strong>{{clinica.nome}}</strong></p>
+                                <p>{{clinica.endereco}}</p>
+                                <p>Telefone: {{clinica.telefone}}</p>
+                            </div>
+                            
+                            <div class="atestado-body">
+                                <p>Atesto para os devidos fins que o(a) paciente <strong>{{paciente.nome}}</strong>, portador(a) do CPF <strong>{{paciente.cpf}}</strong>, esteve sob meus cuidados médicos.</p>
+                                
+                                <p>Diagnóstico: <span contenteditable="true">[Digite o diagnóstico]</span></p>
+                                
+                                <p>Recomendação: <span contenteditable="true">[Digite a recomendação médica]</span></p>
+                                
+                                <p>Período de afastamento: <span contenteditable="true">[Digite o período]</span></p>
+                                
+                                <p>CID: <span contenteditable="true">[Digite o CID se necessário]</span></p>
+                            </div>
+                            
+                            <div class="atestado-footer">
+                                <p>{{clinica.cidade}}, <span id="dataAtestado"></span></p>
+                                <br><br>
+                                <p>_________________________________</p>
+                                <p><strong>Dr(a). {{user.nome}}</strong></p>
+                                <p>CRM: <span contenteditable="true">[Digite o CRM]</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exames Tab -->
+                <div id="exames" class="tab-content">
+                    <div class="content-header">
+                        <h3><i class="fas fa-vial"></i> Exames</h3>
+                        <div class="content-actions">
+                            <button class="btn btn-primary" onclick="solicitarExame()">
+                                <i class="fas fa-plus"></i>
+                                Solicitar Exame
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Exames -->
+                    <div class="exames-container">
+                        <!-- Exames Solicitados -->
+                        <div class="exames-section">
+                            <h4><i class="fas fa-clock"></i> Exames Solicitados</h4>
+                            <div id="examesSolicitados" class="exames-grid">
+                                <!-- Exames solicitados serão carregados aqui -->
+                            </div>
+                        </div>
+                        
+                        <!-- Exames em Andamento -->
+                        <div class="exames-section">
+                            <h4><i class="fas fa-spinner"></i> Exames em Andamento</h4>
+                            <div id="examesAndamento" class="exames-grid">
+                                <!-- Exames em andamento serão carregados aqui -->
+                            </div>
+                        </div>
+                        
+                        <!-- Exames Concluídos -->
+                        <div class="exames-section">
+                            <h4><i class="fas fa-check-circle"></i> Exames Concluídos</h4>
+                            <div id="examesConcluidos" class="exames-grid">
+                                <!-- Exames concluídos serão carregados aqui -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal para solicitar exame -->
+                    <div id="solicitarExameModal" class="modal-overlay" style="display: none;">
+                        <div class="modal">
+                            <div class="modal-header">
+                                <h3>Solicitar Exame</h3>
+                                <button class="close-btn" onclick="fecharModalSolicitarExame()">&times;</button>
+                            </div>
+                            <form id="solicitarExameForm">
+                                <div class="form-group">
+                                    <label>Tipo de Exame</label>
+                                    <input type="text" id="tipoExameSolicitar" class="form-input" placeholder="Ex: Hemograma, Glicemia, Tipo Sanguíneo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Data Solicitada</label>
+                                    <input type="date" id="dataExameSolicitar" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Laboratório</label>
+                                    <input type="text" id="laboratorioExame" class="form-input" placeholder="Nome do laboratório">
+                                </div>
+                                <div class="form-group">
+                                    <label>Médico Solicitante</label>
+                                    <input type="text" id="medicoSolicitante" class="form-input" placeholder="Nome do médico">
+                                </div>
+                                <div class="form-group">
+                                    <label>Observações</label>
+                                    <textarea id="observacoesSolicitar" class="form-textarea" rows="3" placeholder="Observações sobre o exame..."></textarea>
+                                </div>
+                                <div class="modal-actions">
+                                    <button type="button" class="btn btn-secondary" onclick="fecharModalSolicitarExame()">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Solicitar Exame</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal para adicionar resultados -->
+                    <div id="resultadosExameModal" class="modal-overlay" style="display: none;">
+                        <div class="modal">
+                            <div class="modal-header">
+                                <h3>Adicionar Resultados</h3>
+                                <button class="close-btn" onclick="fecharModalResultados()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="exame-info">
+                                    <h4 id="exameNomeResultado"></h4>
+                                    <p id="exameDataResultado"></p>
+                                </div>
+                                
+                                <div class="resultados-form">
+                                    <h5>Resultados</h5>
+                                    <div id="resultadosList" class="resultados-list">
+                                        <!-- Resultados chave-valor serão adicionados aqui -->
+                                    </div>
+                                    
+                                    <div class="add-resultado">
+                                        <div class="resultado-input-group">
+                                            <input type="text" id="novaChave" class="form-input" placeholder="Ex: Tipo Sanguíneo, Glicemia, Hemoglobina">
+                                            <input type="text" id="novoValor" class="form-input" placeholder="Ex: A+, 95 mg/dL, 12.5 g/dL">
+                                            <button type="button" class="btn btn-outline" onclick="adicionarResultado()">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Observações Finais</label>
+                                    <textarea id="observacoesFinais" class="form-textarea" rows="3" placeholder="Observações sobre os resultados..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="fecharModalResultados()">Cancelar</button>
+                                <button type="button" class="btn btn-success" onclick="salvarResultados()">Salvar Resultados</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fotos Tab -->
+                <div id="fotos" class="tab-content">
+                    <div class="content-header">
+                        <h3><i class="fas fa-camera"></i> Fotos do Paciente</h3>
+                        <div class="content-actions">
+                            <button class="btn btn-primary" onclick="abrirCamera()">
+                                <i class="fas fa-camera"></i>
+                                Tirar Foto
+                            </button>
+                            <button class="btn btn-secondary" onclick="uploadFoto()">
+                                <i class="fas fa-upload"></i>
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Camera Section -->
+                    <div id="cameraSection" class="camera-section" style="display: none;">
+                        <div class="camera-container">
+                            <video id="cameraVideo" autoplay></video>
+                            <canvas id="cameraCanvas" style="display: none;"></canvas>
+                        </div>
+                        <div class="camera-controls">
+                            <select id="cameraSelect" class="form-select">
+                                <option value="">Selecione a câmera</option>
+                            </select>
+                            <button class="btn btn-success" onclick="capturarFoto()">
+                                <i class="fas fa-camera"></i>
+                                Capturar
+                            </button>
+                            <button class="btn btn-secondary" onclick="fecharCamera()">
+                                <i class="fas fa-times"></i>
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Photo Form -->
+                    <div id="photoForm" class="photo-form" style="display: none;">
+                        <div class="photo-preview">
+                            <img id="photoPreview" src="" alt="Preview">
+                        </div>
+                        <div class="photo-details">
+                            <div class="form-group">
+                                <label>Título da Foto</label>
+                                <input type="text" id="photoTitle" class="form-input" placeholder="Ex: Antes do procedimento">
+                            </div>
+                            <div class="form-group">
+                                <label>Descrição</label>
+                                <textarea id="photoDescription" class="form-textarea" placeholder="Descreva a foto..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Procedimento</label>
+                                <select id="photoProcedure" class="form-select">
+                                    <option value="">Selecione o procedimento</option>
+                                    <!-- Procedimentos serão carregados via JS -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Momento do Procedimento</label>
+                                <select id="photoMoment" class="form-select">
+                                    <option value="antes">Antes do procedimento</option>
+                                    <option value="durante">Durante o procedimento</option>
+                                    <option value="depois">Depois do procedimento</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelarFoto()">Cancelar</button>
+                                <button class="btn btn-primary" onclick="salvarFoto()">Salvar Foto</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Photos Gallery -->
+                    <div class="photos-gallery" id="photosGallery">
+                        <!-- Fotos serão carregadas aqui -->
+                    </div>
+                    
+                    <!-- Hidden file input -->
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+                </div>
+
+                <!-- Histórico Tab -->
+                <div id="historico" class="tab-content">
+                    <div class="content-header">
+                        <h3><i class="fas fa-history"></i> Histórico de Atendimentos</h3>
+                        <div class="content-actions">
+                            <button class="btn btn-success" onclick="gerarComprovante()">
+                                <i class="fas fa-file-pdf"></i>
+                                Gerar Comprovante
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="historico-filters">
+                        <div class="filter-group">
+                            <label>Período</label>
+                            <input type="date" id="dataInicio" class="form-input">
+                            <span>até</span>
+                            <input type="date" id="dataFim" class="form-input">
+                            <button class="btn btn-secondary" onclick="filtrarHistorico()">
+                                <i class="fas fa-filter"></i>
+                                Filtrar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="historico-list" id="historicoList">
+                        <!-- Histórico será carregado aqui -->
+                    </div>
+                </div>
+
+                <!-- Prescrição Tab -->
+                <div id="prescricao" class="tab-content">
+                    <div class="content-header">
+                        <h3><i class="fas fa-prescription"></i> Prescrição Médica</h3>
+                        <div class="content-actions">
+                            <button class="btn btn-secondary" onclick="novaPrescricao()">
+                                <i class="fas fa-plus"></i>
+                                Nova
+                            </button>
+                            <button class="btn btn-primary" onclick="salvarPrescricao()">
+                                <i class="fas fa-save"></i>
+                                Salvar
+                            </button>
+                            <button class="btn btn-success" onclick="imprimirPrescricao()">
+                                <i class="fas fa-print"></i>
+                                Imprimir
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="prescricao-editor">
+                        <div id="prescricaoContent" class="prescricao-content" contenteditable="true">
+                            <div class="prescricao-header">
+                                <h2>PRESCRIÇÃO MÉDICA</h2>
+                                <p><strong>{{clinica.nome}}</strong></p>
+                                <p>{{clinica.endereco}}</p>
+                                <p>Telefone: {{clinica.telefone}}</p>
+                            </div>
+                            
+                            <div class="prescricao-body">
+                                <p><strong>Paciente:</strong> {{paciente.nome}}</p>
+                                <p><strong>CPF:</strong> {{paciente.cpf}}</p>
+                                <p><strong>Data:</strong> <span id="dataPrescricao"></span></p>
+                                
+                                <h3>Medicamentos Prescritos:</h3>
+                                <div id="medicamentosList" class="medicamentos-list">
+                                    <!-- Medicamentos serão adicionados aqui -->
+                                </div>
+                                
+                                <div class="add-medicamento">
+                                    <button class="btn btn-outline" onclick="adicionarMedicamento()">
+                                        <i class="fas fa-plus"></i>
+                                        Adicionar Medicamento
+                                    </button>
+                                </div>
+                                
+                                <h3>Orientações Gerais:</h3>
+                                <div contenteditable="true" class="orientacoes">
+                                    <p>[Digite as orientações gerais para o paciente]</p>
+                                </div>
+                            </div>
+                            
+                            <div class="prescricao-footer">
+                                <p>{{clinica.cidade}}, <span id="dataPrescricaoFooter"></span></p>
+                                <br><br>
+                                <p>_________________________________</p>
+                                <p><strong>Dr(a). {{user.nome}}</strong></p>
+                                <p>CRM: <span contenteditable="true">[Digite o CRM]</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal para adicionar medicamento -->
+                    <div id="medicamentoModal" class="modal-overlay" style="display: none;">
+                        <div class="modal">
+                            <div class="modal-header">
+                                <h3>Adicionar Medicamento</h3>
+                                <button class="close-btn" onclick="fecharModalMedicamento()">&times;</button>
+                            </div>
+                            <form id="medicamentoForm">
+                                <div class="form-group">
+                                    <label>Medicamento</label>
+                                    <select id="medicamentoSelect" class="form-select">
+                                        <option value="">Selecione o medicamento</option>
+                                        <!-- Medicamentos cadastrados serão carregados aqui -->
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Dosagem</label>
+                                    <input type="text" id="dosagem" class="form-input" placeholder="Ex: 500mg">
+                                </div>
+                                <div class="form-group">
+                                    <label>Frequência</label>
+                                    <input type="text" id="frequencia" class="form-input" placeholder="Ex: 2x ao dia">
+                                </div>
+                                <div class="form-group">
+                                    <label>Duração</label>
+                                    <input type="text" id="duracao" class="form-input" placeholder="Ex: 7 dias">
+                                </div>
+                                <div class="form-group">
+                                    <label>Observações</label>
+                                    <textarea id="observacoesMed" class="form-textarea" placeholder="Ex: Tomar após as refeições"></textarea>
+                                </div>
+                                <div class="modal-actions">
+                                    <button type="button" class="btn btn-secondary" onclick="fecharModalMedicamento()">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<link rel="stylesheet" href="/css/atendimento.css">
+
+<!-- JavaScript -->
+<script src="/js/menuMobile.js"></script>
+<script>
+// Global variables
+let currentPatientId = {{paciente.id}};
+let currentStream = null;
+let medicamentosDisponiveis = [];
+
+// Tab functionality
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    
+    // Hide all tab contents
+    tabcontent = document.getElementsByClassName('tab-content');
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].classList.remove('active');
+    }
+    
+    // Remove active class from all tab buttons
+    tablinks = document.getElementsByClassName('tab-btn');
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].classList.remove('active');
+    }
+    
+    // Show the selected tab and mark button as active
+    document.getElementById(tabName).classList.add('active');
+    evt.currentTarget.classList.add('active');
+}
+
+// Initialize dates
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toLocaleDateString('pt-BR');
+    const todayISO = new Date().toISOString().split('T')[0];
+    
+    // Set dates in documents
+    const dataAtestado = document.getElementById('dataAtestado');
+    const dataPrescricao = document.getElementById('dataPrescricao');
+    const dataPrescricaoFooter = document.getElementById('dataPrescricaoFooter');
+    
+    if (dataAtestado) dataAtestado.textContent = today;
+    if (dataPrescricao) dataPrescricao.textContent = today;
+    if (dataPrescricaoFooter) dataPrescricaoFooter.textContent = today;
+    
+    // Set default dates in filters
+    const dataFim = document.getElementById('dataFim');
+    if (dataFim) dataFim.value = todayISO;
+    
+    // Load initial data
+    carregarMedicamentos();
+    carregarHistorico();
+    carregarFotos();
+    carregarExames();
+    carregarAnamnese();
+});
+
+// Anamnese functions
+function salvarAnamnese() {
+    const anamnese = {
+        paciente_id: currentPatientId,
+        queixa_principal: document.getElementById('queixaPrincipal').value,
+        historia_doenca: document.getElementById('historiaDoenca').value,
+        antecedentes_pessoais: document.getElementById('antecedentesPessoais').value,
+        medicamentos_uso: document.getElementById('medicamentosUso').value,
+        exame_fisico: document.getElementById('exameFisico').value
+    };
+    
+    fetch('/sistema/atendimento/anamnese', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(anamnese)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Anamnese salva com sucesso!');
+        } else {
+            alert('Erro ao salvar anamnese: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar anamnese');
+    });
+}
+
+// Atestado functions
+function novoAtestado() {
+    if (confirm('Deseja criar um novo atestado? O conteúdo atual será perdido.')) {
+        location.reload();
+    }
+}
+
+function salvarAtestado() {
+    const conteudo = document.getElementById('atestadoContent').innerHTML;
+    
+    const atestado = {
+        paciente_id: currentPatientId,
+        conteudo: conteudo,
+        tipo: 'medico'
+    };
+    
+    fetch('/sistema/atendimento/atestado', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(atestado)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Atestado salvo com sucesso!');
+        } else {
+            alert('Erro ao salvar atestado: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar atestado');
+    });
+}
+
+function imprimirAtestado() {
+    const conteudo = document.getElementById('atestadoContent').innerHTML;
+    const janela = window.open('', '_blank');
+    janela.document.write(`
+        <html>
+            <head>
+                <title>Atestado Médico</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; padding: 40px; line-height: 1.6; }
+                    .atestado-header { text-align: center; margin-bottom: 40px; }
+                    .atestado-footer { margin-top: 60px; text-align: center; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>${conteudo}</body>
+        </html>
+    `);
+    janela.document.close();
+    janela.print();
+}
+
+function formatText(command) {
+    document.execCommand(command, false, null);
+}
+
+function changeFontSize(size) {
+    document.execCommand('fontSize', false, size);
+}
+
+// Camera functions
+function abrirCamera() {
+    document.getElementById('cameraSection').style.display = 'block';
+    iniciarCamera();
+}
+
+function fecharCamera() {
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+    }
+    document.getElementById('cameraSection').style.display = 'none';
+}
+
+async function iniciarCamera() {
+    try {
+        // Get available cameras
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        const cameraSelect = document.getElementById('cameraSelect');
+        cameraSelect.innerHTML = '<option value="">Selecione a câmera</option>';
+        
+        videoDevices.forEach((device, index) => {
+            const option = document.createElement('option');
+            option.value = device.deviceId;
+            option.textContent = device.label || `Câmera ${index + 1}`;
+            cameraSelect.appendChild(option);
+        });
+        
+        // Start with first camera if available
+        if (videoDevices.length > 0) {
+            cameraSelect.value = videoDevices[0].deviceId;
+            await selecionarCamera(videoDevices[0].deviceId);
+        }
+        
+        cameraSelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+                selecionarCamera(e.target.value);
+            }
+        });
+        
+    } catch (error) {
+        console.error('Erro ao acessar câmeras:', error);
+        alert('Erro ao acessar as câmeras. Verifique as permissões.');
+    }
+}
+
+async function selecionarCamera(deviceId) {
+    try {
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+        }
+        
+        const constraints = {
+            video: {
+                deviceId: deviceId ? { exact: deviceId } : undefined,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
+        
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = currentStream;
+        
+    } catch (error) {
+        console.error('Erro ao selecionar câmera:', error);
+        alert('Erro ao acessar a câmera selecionada.');
+    }
+}
+
+function capturarFoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Show photo form
+    document.getElementById('photoPreview').src = dataURL;
+    document.getElementById('photoForm').style.display = 'grid';
+    
+    // Hide camera
+    fecharCamera();
+}
+
+function uploadFoto() {
+    document.getElementById('fileInput').click();
+}
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('photoPreview').src = e.target.result;
+            document.getElementById('photoForm').style.display = 'grid';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function cancelarFoto() {
+    document.getElementById('photoForm').style.display = 'none';
+    document.getElementById('photoPreview').src = '';
+    document.getElementById('photoTitle').value = '';
+    document.getElementById('photoDescription').value = '';
+    document.getElementById('photoProcedure').value = '';
+    document.getElementById('photoMoment').value = 'antes';
+}
+
+function salvarFoto() {
+    const foto = {
+        paciente_id: currentPatientId,
+        titulo: document.getElementById('photoTitle').value,
+        descricao: document.getElementById('photoDescription').value,
+        procedimento: document.getElementById('photoProcedure').value,
+        momento: document.getElementById('photoMoment').value,
+        imagem_base64: document.getElementById('photoPreview').src
+    };
+    
+    fetch('/sistema/atendimento/foto', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(foto)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Foto salva com sucesso!');
+            cancelarFoto();
+            carregarFotos();
+        } else {
+            alert('Erro ao salvar foto: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar foto');
+    });
+}
+
+// Load functions
+function carregarMedicamentos() {
+    fetch('/sistema/atendimento/medicamentos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('medicamentoSelect');
+                select.innerHTML = '<option value="">Selecione o medicamento</option>';
+                data.data.forEach(med => {
+                    const option = document.createElement('option');
+                    option.value = med.id;
+                    option.textContent = med.nome;
+                    select.appendChild(option);
+                });
+                medicamentosDisponiveis = data.data;
+            }
+        })
+        .catch(error => console.error('Erro ao carregar medicamentos:', error));
+}
+
+function carregarHistorico() {
+    fetch(`/sistema/atendimento/historico/${currentPatientId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                exibirHistorico(data.data);
+            }
+        })
+        .catch(error => console.error('Erro ao carregar histórico:', error));
+}
+
+function carregarFotos() {
+    fetch(`/sistema/atendimento/fotos/${currentPatientId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                exibirFotos(data.data);
+            }
+        })
+        .catch(error => console.error('Erro ao carregar fotos:', error));
+}
+
+function carregarExames() {
+    fetch(`/sistema/atendimento/exames/${currentPatientId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                exibirExames(data.data);
+            }
+        })
+        .catch(error => console.error('Erro ao carregar exames:', error));
+}
+
+function carregarAnamnese() {
+    fetch(`/sistema/atendimento/anamnese/${currentPatientId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                const anamnese = data.data;
+                document.getElementById('queixaPrincipal').value = anamnese.queixa_principal || '';
+                document.getElementById('historiaDoenca').value = anamnese.historia_doenca || '';
+                document.getElementById('antecedentesPessoais').value = anamnese.antecedentes_pessoais || '';
+                document.getElementById('medicamentosUso').value = anamnese.medicamentos_uso || '';
+                document.getElementById('exameFisico').value = anamnese.exame_fisico || '';
+            }
+        })
+        .catch(error => console.error('Erro ao carregar anamnese:', error));
+}
+
+// Prescription functions
+function novaPrescricao() {
+    if (confirm('Deseja criar uma nova prescrição? O conteúdo atual será perdido.')) {
+        document.getElementById('medicamentosList').innerHTML = '';
+        document.querySelector('.orientacoes').innerHTML = '<p>[Digite as orientações gerais para o paciente]</p>';
+    }
+}
+
+function salvarPrescricao() {
+    const conteudo = document.getElementById('prescricaoContent').innerHTML;
+    // Implementar salvamento via API
+    console.log('Salvando prescrição:', conteudo);
+    alert('Prescrição salva com sucesso!');
+}
+
+function imprimirPrescricao() {
+    const conteudo = document.getElementById('prescricaoContent').innerHTML;
+    const janela = window.open('', '_blank');
+    janela.document.write(`
+        <html>
+            <head>
+                <title>Prescrição Médica</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; padding: 40px; line-height: 1.6; }
+                    .prescricao-header { text-align: center; margin-bottom: 40px; }
+                    .prescricao-footer { margin-top: 60px; text-align: center; }
+                    .medicamento-item { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #3498db; }
+                    @media print { body { margin: 0; } }
+                </style>
+            </head>
+            <body>${conteudo}</body>
+        </html>
+    `);
+    janela.document.close();
+    janela.print();
+}
+
+function adicionarMedicamento() {
+    document.getElementById('medicamentoModal').style.display = 'flex';
+}
+
+function fecharModalMedicamento() {
+    document.getElementById('medicamentoModal').style.display = 'none';
+    document.getElementById('medicamentoForm').reset();
+}
+
+// Event listeners
+document.getElementById('medicamentoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const medicamento = {
+        nome: document.getElementById('medicamentoSelect').selectedOptions[0].text,
+        dosagem: document.getElementById('dosagem').value,
+        frequencia: document.getElementById('frequencia').value,
+        duracao: document.getElementById('duracao').value,
+        observacoes: document.getElementById('observacoesMed').value
+    };
+    
+    adicionarMedicamentoLista(medicamento);
+    fecharModalMedicamento();
+});
+
+// Event listener para solicitar exame
+document.getElementById('solicitarExameForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const exame = {
+        paciente_id: currentPatientId,
+        tipo_exame: document.getElementById('tipoExameSolicitar').value,
+        data_exame: document.getElementById('dataExameSolicitar').value,
+        laboratorio: document.getElementById('laboratorioExame').value,
+        medico_solicitante: document.getElementById('medicoSolicitante').value,
+        observacoes: document.getElementById('observacoesSolicitar').value,
+        status: 'solicitado'
+    };
+    
+    fetch('/sistema/atendimento/exame', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(exame)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Exame solicitado com sucesso!');
+            fecharModalSolicitarExame();
+            carregarExames();
+        } else {
+            alert('Erro ao solicitar exame: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao solicitar exame');
+    });
+});
+
+// Event listener para adicionar resultado com Enter
+document.getElementById('novaChave').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('novoValor').focus();
+    }
+});
+
+document.getElementById('novoValor').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        adicionarResultado();
+    }
+});
+
+function adicionarMedicamentoLista(medicamento) {
+    const lista = document.getElementById('medicamentosList');
+    const div = document.createElement('div');
+    div.className = 'medicamento-item';
+    div.innerHTML = `
+        <h5>${medicamento.nome}</h5>
+        <p><strong>Dosagem:</strong> ${medicamento.dosagem}</p>
+        <p><strong>Frequência:</strong> ${medicamento.frequencia}</p>
+        <p><strong>Duração:</strong> ${medicamento.duracao}</p>
+        ${medicamento.observacoes ? `<p><strong>Observações:</strong> ${medicamento.observacoes}</p>` : ''}
+        <button onclick="this.parentElement.remove()" style="float: right; background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    lista.appendChild(div);
+}
+
+// Exam functions
+let currentExameId = null;
+let resultadosTemporarios = [];
+
+function solicitarExame() {
+    document.getElementById('solicitarExameModal').style.display = 'flex';
+    // Definir data padrão como hoje
+    document.getElementById('dataExameSolicitar').value = new Date().toISOString().split('T')[0];
+}
+
+function fecharModalSolicitarExame() {
+    document.getElementById('solicitarExameModal').style.display = 'none';
+    document.getElementById('solicitarExameForm').reset();
+}
+
+function fecharModalResultados() {
+    document.getElementById('resultadosExameModal').style.display = 'none';
+    currentExameId = null;
+    resultadosTemporarios = [];
+    document.getElementById('resultadosList').innerHTML = '';
+    document.getElementById('observacoesFinais').value = '';
+}
+
+function abrirModalResultados(exameId, nomeExame, dataExame) {
+    currentExameId = exameId;
+    document.getElementById('exameNomeResultado').textContent = nomeExame;
+    document.getElementById('exameDataResultado').textContent = `Data: ${new Date(dataExame).toLocaleDateString('pt-BR')}`;
+    
+    // Carregar resultados existentes se houver
+    carregarResultadosExistentes(exameId);
+    
+    document.getElementById('resultadosExameModal').style.display = 'flex';
+}
+
+function carregarResultadosExistentes(exameId) {
+    // Buscar resultados existentes do exame
+    fetch(`/sistema/atendimento/exames/${currentPatientId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const exame = data.data.find(e => e.id === exameId);
+                if (exame && exame.resultados_json) {
+                    resultadosTemporarios = JSON.parse(exame.resultados_json) || [];
+                    atualizarListaResultados();
+                    document.getElementById('observacoesFinais').value = exame.observacoes || '';
+                }
+            }
+        })
+        .catch(error => console.error('Erro ao carregar resultados:', error));
+}
+
+function adicionarResultado() {
+    const chave = document.getElementById('novaChave').value.trim();
+    const valor = document.getElementById('novoValor').value.trim();
+    
+    if (!chave || !valor) {
+        alert('Por favor, preencha tanto a chave quanto o valor.');
+        return;
+    }
+    
+    // Verificar se a chave já existe
+    const existeChave = resultadosTemporarios.find(r => r.chave.toLowerCase() === chave.toLowerCase());
+    if (existeChave) {
+        if (confirm(`A chave "${chave}" já existe. Deseja substituir o valor?`)) {
+            existeChave.valor = valor;
+        } else {
+            return;
+        }
+    } else {
+        resultadosTemporarios.push({ chave, valor });
+    }
+    
+    // Limpar campos
+    document.getElementById('novaChave').value = '';
+    document.getElementById('novoValor').value = '';
+    
+    atualizarListaResultados();
+}
+
+function atualizarListaResultados() {
+    const lista = document.getElementById('resultadosList');
+    
+    if (resultadosTemporarios.length === 0) {
+        lista.innerHTML = '<p class="empty-resultados">Nenhum resultado adicionado ainda.</p>';
+        return;
+    }
+    
+    lista.innerHTML = resultadosTemporarios.map((resultado, index) => `
+        <div class="resultado-item">
+            <div class="resultado-content">
+                <div class="resultado-chave">${resultado.chave}</div>
+                <div class="resultado-valor">${resultado.valor}</div>
+            </div>
+            <button class="resultado-remove" onclick="removerResultado(${index})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removerResultado(index) {
+    resultadosTemporarios.splice(index, 1);
+    atualizarListaResultados();
+}
+
+function salvarResultados() {
+    if (resultadosTemporarios.length === 0) {
+        alert('Adicione pelo menos um resultado antes de salvar.');
+        return;
+    }
+    
+    const dadosExame = {
+        exame_id: currentExameId,
+        resultados_json: JSON.stringify(resultadosTemporarios),
+        observacoes: document.getElementById('observacoesFinais').value,
+        status: 'concluido'
+    };
+    
+    fetch('/sistema/atendimento/exame/resultado', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dadosExame)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Resultados salvos com sucesso!');
+            fecharModalResultados();
+            carregarExames();
+        } else {
+            alert('Erro ao salvar resultados: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar resultados');
+    });
+}
+
+function iniciarExame(exameId) {
+    fetch('/sistema/atendimento/exame/status', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ exame_id: exameId, status: 'em_andamento' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            carregarExames();
+        } else {
+            alert('Erro ao iniciar exame: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao iniciar exame');
+    });
+}
+
+// History functions
+function filtrarHistorico() {
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    
+    // Implementar filtro do histórico
+    console.log('Filtrando histórico:', { dataInicio, dataFim });
+}
+
+function gerarComprovante() {
+    // Implementar geração de comprovante
+    console.log('Gerando comprovante...');
+    alert('Comprovante gerado com sucesso!');
+}
+
+function finalizarAtendimento() {
+    if (confirm('Deseja finalizar o atendimento? Esta ação não pode ser desfeita.')) {
+        fetch(`/sistema/atendimento/finalizar/${currentPatientId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ observacoes: 'Atendimento finalizado' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Atendimento finalizado com sucesso!');
+                window.location.href = '/sistema/atendimento';
+            } else {
+                alert('Erro ao finalizar atendimento: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao finalizar atendimento');
+        });
+    }
+}
+
+// Funções de exibição de dados
+function exibirHistorico(historico) {
+    const lista = document.getElementById('historicoList');
+    lista.innerHTML = '';
+    
+    // Combinar todos os registros e ordenar por data
+    const todosRegistros = [];
+    
+    if (historico.anamneses) {
+        historico.anamneses.forEach(item => {
+            todosRegistros.push({
+                tipo: 'Anamnese',
+                data: item.createdAt,
+                descricao: 'Anamnese registrada',
+                detalhes: item.queixa_principal
+            });
+        });
+    }
+    
+    if (historico.atestados) {
+        historico.atestados.forEach(item => {
+            todosRegistros.push({
+                tipo: 'Atestado',
+                data: item.data_emissao,
+                descricao: 'Atestado médico emitido',
+                detalhes: item.tipo
+            });
+        });
+    }
+    
+    if (historico.exames) {
+        historico.exames.forEach(item => {
+            todosRegistros.push({
+                tipo: 'Exame',
+                data: item.data_exame,
+                descricao: item.tipo_exame,
+                detalhes: item.resultado
+            });
+        });
+    }
+    
+    if (historico.fotos) {
+        historico.fotos.forEach(item => {
+            todosRegistros.push({
+                tipo: 'Foto',
+                data: item.data_foto,
+                descricao: item.titulo,
+                detalhes: item.momento
+            });
+        });
+    }
+    
+    if (historico.prescricoes) {
+        historico.prescricoes.forEach(item => {
+            todosRegistros.push({
+                tipo: 'Prescrição',
+                data: item.data_prescricao,
+                descricao: 'Prescrição médica',
+                detalhes: 'Medicamentos prescritos'
+            });
+        });
+    }
+    
+    // Ordenar por data (mais recente primeiro)
+    todosRegistros.sort((a, b) => new Date(b.data) - new Date(a.data));
+    
+    todosRegistros.forEach(registro => {
+        const div = document.createElement('div');
+        div.className = 'historico-item';
+        div.innerHTML = `
+            <div class="historico-header">
+                <span class="historico-date">${new Date(registro.data).toLocaleDateString('pt-BR')}</span>
+                <span class="historico-tipo">${registro.tipo}</span>
+            </div>
+            <h5>${registro.descricao}</h5>
+            <p>${registro.detalhes}</p>
+        `;
+        lista.appendChild(div);
+    });
+}
+
+function exibirFotos(fotos) {
+    const galeria = document.getElementById('photosGallery');
+    galeria.innerHTML = '';
+    
+    fotos.forEach(foto => {
+        const div = document.createElement('div');
+        div.className = 'photo-card';
+        div.innerHTML = `
+            <img src="${foto.caminho_arquivo}" alt="${foto.titulo}">
+            <div class="photo-info">
+                <h5>${foto.titulo}</h5>
+                <p>${foto.descricao}</p>
+                <p><strong>Momento:</strong> ${foto.momento}</p>
+                <p><strong>Data:</strong> ${new Date(foto.data_foto).toLocaleDateString('pt-BR')}</p>
+            </div>
+        `;
+        galeria.appendChild(div);
+    });
+}
+
+function exibirExames(exames) {
+    const solicitados = document.getElementById('examesSolicitados');
+    const andamento = document.getElementById('examesAndamento');
+    const concluidos = document.getElementById('examesConcluidos');
+    
+    // Limpar containers
+    solicitados.innerHTML = '';
+    andamento.innerHTML = '';
+    concluidos.innerHTML = '';
+    
+    // Separar exames por status
+    const exameSolicitados = exames.filter(e => e.status === 'solicitado');
+    const examesAndamento = exames.filter(e => e.status === 'em_andamento');
+    const examesConcluidos = exames.filter(e => e.status === 'concluido');
+    
+    // Exibir exames solicitados
+    if (exameSolicitados.length === 0) {
+        solicitados.innerHTML = '<div class="empty-exames"><i class="fas fa-clock"></i><p>Nenhum exame solicitado</p></div>';
+    } else {
+        exameSolicitados.forEach(exame => {
+            const card = criarCardExame(exame);
+            solicitados.appendChild(card);
+        });
+    }
+    
+    // Exibir exames em andamento
+    if (examesAndamento.length === 0) {
+        andamento.innerHTML = '<div class="empty-exames"><i class="fas fa-spinner"></i><p>Nenhum exame em andamento</p></div>';
+    } else {
+        examesAndamento.forEach(exame => {
+            const card = criarCardExame(exame);
+            andamento.appendChild(card);
+        });
+    }
+    
+    // Exibir exames concluídos
+    if (examesConcluidos.length === 0) {
+        concluidos.innerHTML = '<div class="empty-exames"><i class="fas fa-check-circle"></i><p>Nenhum exame concluído</p></div>';
+    } else {
+        examesConcluidos.forEach(exame => {
+            const card = criarCardExame(exame);
+            concluidos.appendChild(card);
+        });
+    }
+}
+
+function criarCardExame(exame) {
+    const div = document.createElement('div');
+    div.className = `exame-card ${exame.status}`;
+    
+    let resultadosHtml = '';
+    if (exame.resultados_json) {
+        try {
+            const resultados = JSON.parse(exame.resultados_json);
+            if (resultados && resultados.length > 0) {
+                resultadosHtml = '<div class="exame-resultados">';
+                resultados.forEach(resultado => {
+                    resultadosHtml += `<p><strong>${resultado.chave}:</strong> ${resultado.valor}</p>`;
+                });
+                resultadosHtml += '</div>';
+            }
+        } catch (e) {
+            console.error('Erro ao parsear resultados:', e);
+        }
+    }
+    
+    let actionsHtml = '';
+    if (exame.status === 'solicitado') {
+        actionsHtml = `
+            <div class="exame-actions">
+                <button class="btn-small btn-resultado" onclick="iniciarExame(${exame.id})">
+                    <i class="fas fa-play"></i> Iniciar
+                </button>
+            </div>
+        `;
+    } else if (exame.status === 'em_andamento') {
+        actionsHtml = `
+            <div class="exame-actions">
+                <button class="btn-small btn-concluir" onclick="abrirModalResultados(${exame.id}, '${exame.tipo_exame}', '${exame.data_exame}')">
+                    <i class="fas fa-plus"></i> Adicionar Resultados
+                </button>
+            </div>
+        `;
+    } else if (exame.status === 'concluido') {
+        actionsHtml = `
+            <div class="exame-actions">
+                <button class="btn-small btn-resultado" onclick="abrirModalResultados(${exame.id}, '${exame.tipo_exame}', '${exame.data_exame}')">
+                    <i class="fas fa-edit"></i> Editar Resultados
+                </button>
+            </div>
+        `;
+    }
+    
+    div.innerHTML = `
+        <div class="exame-header">
+            <h5 class="exame-title">${exame.tipo_exame}</h5>
+            <span class="exame-status ${exame.status}">${getStatusText(exame.status)}</span>
+        </div>
+        <div class="exame-info">
+            <p><i class="fas fa-calendar"></i> <strong>Data:</strong> ${new Date(exame.data_exame).toLocaleDateString('pt-BR')}</p>
+            ${exame.laboratorio ? `<p><i class="fas fa-building"></i> <strong>Laboratório:</strong> ${exame.laboratorio}</p>` : ''}
+            ${exame.medico_solicitante ? `<p><i class="fas fa-user-md"></i> <strong>Médico:</strong> ${exame.medico_solicitante}</p>` : ''}
+            ${exame.observacoes ? `<p><i class="fas fa-comment"></i> <strong>Observações:</strong> ${exame.observacoes}</p>` : ''}
+        </div>
+        ${resultadosHtml}
+        ${actionsHtml}
+    `;
+    
+    return div;
+}
+
+function getStatusText(status) {
+    switch (status) {
+        case 'solicitado': return 'Solicitado';
+        case 'em_andamento': return 'Em Andamento';
+        case 'concluido': return 'Concluído';
+        default: return status;
+    }
+}
+</script>

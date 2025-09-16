@@ -23,9 +23,15 @@ const Exame = sequelize.define('Exame', {
         type: DataTypes.DATE,
         allowNull: false
     },
-    resultado: {
-        type: DataTypes.TEXT,
-        allowNull: true
+    status: {
+        type: DataTypes.ENUM('solicitado', 'em_andamento', 'concluido'),
+        allowNull: false,
+        defaultValue: 'solicitado'
+    },
+    resultados_json: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        comment: 'Armazena resultados como array de objetos {chave: valor}'
     },
     observacoes: {
         type: DataTypes.TEXT,
