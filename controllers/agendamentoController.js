@@ -1,4 +1,4 @@
-const { Agendamento, Paciente, Usuario, Produto, ItemAgendamento } = require('../models');
+const { Agendamento, Paciente, Usuario, Produto, ItemAgendamento, Pagamento } = require('../models');
 const { Op } = require('sequelize');
 
 class AgendamentoController {
@@ -58,6 +58,12 @@ class AgendamentoController {
                         as: 'produto',
                         attributes: ['id', 'nome', 'categoria', 'preco']
                     }],
+                    required: false
+                },
+                {
+                    model: Pagamento,
+                    as: 'pagamentos',
+                    attributes: ['id', 'status', 'valor_final', 'data_pagamento'],
                     required: false
                 }
             ];
