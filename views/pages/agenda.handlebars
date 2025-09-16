@@ -272,6 +272,102 @@ document.addEventListener('DOMContentLoaded', function() {
     buscarAgendamentos();
 });
 
+// Ver detalhes completos do agendamento
+function verDetalhesAgendamento(id) {
+    fetch(`/sistema/agendamentos/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const agendamento = data.data;
+                
+                // Formatar data e hora
+                const dataAgendamento = new Date(agendamento.data_agendamento);
+                const dataFormatada = dataAgendamento.toLocaleDateString('pt-BR');
+                const horaFormatada = dataAgendamento.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                
+                // Formatar valores
+                const valor = agendamento.valor ? `R$ ${parseFloat(agendamento.valor).toFixed(2).replace('.', ',')}` : 'Não informado';
+                const desconto = agendamento.desconto ? `R$ ${parseFloat(agendamento.desconto).toFixed(2).replace('.', ',')}` : 'R$ 0,00';
+                const valorFinal = agendamento.valor_final ? `R$ ${parseFloat(agendamento.valor_final).toFixed(2).replace('.', ',')}` : 'Não informado';
+                
+                // Montar lista de itens
+                let itensTexto = 'Nenhum item específico';
+                if (agendamento.itens && agendamento.itens.length > 0) {
+                    itensTexto = agendamento.itens.map(item => {
+                        const valorItem = parseFloat(item.valor_unitario || 0).toFixed(2).replace('.', ',');
+                        const descontoItem = parseFloat(item.desconto || 0).toFixed(2).replace('.', ',');
+                        return `• ${item.produto.nome} (${item.quantidade}x) - R$ ${valorItem} cada${item.desconto > 0 ? ` - Desc: R$ ${descontoItem}` : ''}`;
+                    }).join('\n');
+                } else if (agendamento.produto?.nome) {
+                    itensTexto = `• ${agendamento.produto.nome}`;
+                }
+                
+                // Criar HTML detalhado para o modal
+                const detalhesHtml = `
+                    <div style="display: grid; gap: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="padding: 15px; background: #f8fafc; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">👤 Paciente</h4>
+                                <p style="margin: 5px 0; font-weight: 600; color: #374151;">${agendamento.paciente?.nome || 'N/A'}</p>
+                                <p style="margin: 5px 0; color: #6b7280; font-size: 14px;">📄 CPF: ${agendamento.paciente?.cpf || 'N/A'}</p>
+                                <p style="margin: 5px 0; color: #6b7280; font-size: 14px;">📞 ${agendamento.paciente?.telefone || 'Não informado'}</p>
+                            </div>
+                            <div style="padding: 15px; background: #f8fafc; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">👨‍⚕️ Profissional</h4>
+                                <p style="margin: 5px 0; font-weight: 600; color: #374151;">${agendamento.profissional?.nome || 'N/A'}</p>
+                                <p style="margin: 5px 0; color: #6b7280; font-size: 14px;">${agendamento.profissional?.especialidade || ''}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 15px; background: #f0f9ff; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">📅 Data e Hora</h4>
+                            <p style="margin: 5px 0; font-weight: 600; color: #374151; font-size: 16px;">${dataFormatada} às ${horaFormatada}</p>
+                        </div>
+                        
+                        <div style="padding: 15px; background: #fefce8; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">🏥 Procedimentos/Produtos</h4>
+                            <div style="white-space: pre-line; color: #374151; line-height: 1.6;">${itensTexto}</div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="padding: 15px; background: #f0fdf4; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">💰 Valores</h4>
+                                <p style="margin: 5px 0; color: #374151;">Subtotal: <strong>${valor}</strong></p>
+                                <p style="margin: 5px 0; color: #374151;">Desconto: <strong>${desconto}</strong></p>
+                                <p style="margin: 5px 0; color: #374151; font-size: 16px;">Total: <strong style="color: #059669;">${valorFinal}</strong></p>
+                            </div>
+                            <div style="padding: 15px; background: #fef2f2; border-radius: 8px;">
+                                <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">📊 Status</h4>
+                                <p style="margin: 5px 0; font-weight: 600; color: #374151; text-transform: uppercase;">${agendamento.status}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 15px; background: #f8fafc; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 16px;">📝 Observações</h4>
+                            <p style="margin: 5px 0; color: #374151; line-height: 1.6;">${agendamento.observacoes || 'Nenhuma observação'}</p>
+                        </div>
+                        
+                        <div style="padding: 15px; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <h4 style="margin: 0 0 10px 0; color: #1e293b; font-size: 14px;">📅 Informações do Sistema</h4>
+                            <p style="margin: 5px 0; color: #6b7280; font-size: 12px;">Criado em: ${new Date(agendamento.criado_em).toLocaleString('pt-BR')}</p>
+                            <p style="margin: 5px 0; color: #6b7280; font-size: 12px;">Atualizado em: ${new Date(agendamento.atualizado_em).toLocaleString('pt-BR')}</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Preencher modal e exibir
+                document.getElementById('conteudoDetalhes').innerHTML = detalhesHtml;
+                document.getElementById('modalDetalhes').style.display = 'flex';
+            } else {
+                alert('❌ Erro ao carregar detalhes do agendamento');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('❌ Erro ao carregar detalhes');
+        });
+}
+
 // Remarcar agendamento (apenas data e hora)
 function remarcarAgendamento(id) {
     fetch(`/sistema/agendamentos/${id}`)
@@ -279,62 +375,32 @@ function remarcarAgendamento(id) {
         .then(data => {
             if (data.success) {
                 const agendamento = data.data;
+                agendamentoReagendandoId = id;
                 
                 // Obter data e hora atuais
                 const dataAtual = new Date(agendamento.data_agendamento);
                 const dataFormatada = dataAtual.toISOString().split('T')[0];
                 const horaFormatada = dataAtual.toTimeString().slice(0, 5);
                 
-                // Solicitar nova data
-                const novaData = prompt(`📅 REMARCAR AGENDAMENTO\n\nPaciente: ${agendamento.paciente?.nome}\nData atual: ${dataFormatada}\n\nDigite a nova data (AAAA-MM-DD):`, dataFormatada);
+                // Preencher informações no modal
+                const infoHtml = `
+                    <div style="text-align: center;">
+                        <h4 style="margin: 0 0 10px 0; color: #1e293b;">👤 ${agendamento.paciente?.nome || 'N/A'}</h4>
+                        <p style="margin: 5px 0; color: #6b7280;">📅 Data atual: <strong>${dataAtual.toLocaleDateString('pt-BR')}</strong></p>
+                        <p style="margin: 5px 0; color: #6b7280;">🕐 Hora atual: <strong>${dataAtual.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</strong></p>
+                    </div>
+                `;
                 
-                if (!novaData) return;
+                document.getElementById('infoReagendamento').innerHTML = infoHtml;
                 
-                // Solicitar nova hora
-                const novaHora = prompt(`🕐 NOVA HORA\n\nData: ${novaData}\nHora atual: ${horaFormatada}\n\nDigite a nova hora (HH:MM):`, horaFormatada);
+                // Preencher campos com valores atuais
+                document.getElementById('novaDataReagendar').value = dataFormatada;
+                document.getElementById('novaHoraReagendar').value = horaFormatada;
                 
-                if (!novaHora) return;
-                
-                // Validar formato
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(novaData)) {
-                    alert('❌ Formato de data inválido! Use AAAA-MM-DD');
-                    return;
-                }
-                
-                if (!/^\d{2}:\d{2}$/.test(novaHora)) {
-                    alert('❌ Formato de hora inválido! Use HH:MM');
-                    return;
-                }
-                
-                const novaDataHora = `${novaData} ${novaHora}:00`;
-                
-                // Confirmar alteração
-                const confirmacao = confirm(`✅ CONFIRMAR REMARCAÇÃO\n\nDe: ${dataFormatada} ${horaFormatada}\nPara: ${novaData} ${novaHora}\n\nConfirmar alteração?`);
-                
-                if (!confirmacao) return;
-                
-                // Atualizar no backend
-                fetch(`/sistema/agendamentos/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        data_agendamento: novaDataHora,
-                        profissional_id: agendamento.profissional_id
-                    })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert('✅ Agendamento remarcado com sucesso!');
-                        buscarAgendamentos();
-                    } else {
-                        alert('❌ ' + result.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('❌ Erro ao remarcar agendamento');
-                });
+                // Exibir modal
+                document.getElementById('modalReagendar').style.display = 'flex';
+            } else {
+                alert('❌ Erro ao carregar dados do agendamento');
             }
         })
         .catch(error => {
@@ -423,6 +489,9 @@ function exibirAgendamentos(agendamentos) {
                 <td><span class="status-badge status-${agendamento.status}">${agendamento.status}</span></td>
                 <td>
                     <div class="actions-group">
+                        <button class="btn btn-sm btn-success" data-id="${agendamento.id}" data-action="detalhes" title="Ver Detalhes Completos">
+                            <i class="fas fa-eye"></i>
+                        </button>
                         <button class="btn btn-sm btn-info" data-id="${agendamento.id}" data-action="remarcar" title="Remarcar Data/Hora">
                             <i class="fas fa-calendar-alt"></i>
                         </button>
@@ -544,6 +613,18 @@ function fecharModal() {
     document.getElementById('profissionalSelect').disabled = false;
     document.getElementById('dataAgendamento').disabled = false;
     document.getElementById('horarioAgendamento').disabled = false;
+    
+    // Limpar lista de pacientes se existir
+    const listaPacientes = document.getElementById('listaPacientes');
+    if (listaPacientes) {
+        listaPacientes.remove();
+    }
+    
+    // Remover aviso de edição se existir
+    const avisoEdicao = document.getElementById('avisoEdicao');
+    if (avisoEdicao) {
+        avisoEdicao.remove();
+    }
 }
 
 // Alterar tipo de agendamento
@@ -838,25 +919,24 @@ function carregarProdutosNoItem(itemId) {
 
 // Buscar pacientes
 function buscarPacientes() {
-    const busca = document.getElementById('buscaPaciente').value;
+    const termo = document.getElementById('buscaPaciente').value.trim();
     
-    if (busca.length < 2) {
-        alert('❌ Digite pelo menos 2 caracteres para buscar');
+    if (!termo) {
+        alert('❌ Digite um nome ou CPF para buscar');
         return;
     }
     
-    fetch(`/sistema/pacientes/buscar?busca=${encodeURIComponent(busca)}`)
+    fetch(`/sistema/pacientes/buscar?busca=${encodeURIComponent(termo)}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.data.length > 0) {
-                const paciente = data.data[0];
-                document.getElementById('pacienteId').value = paciente.id;
-                document.getElementById('infoPaciente').innerHTML = `
-                    <strong>${paciente.nome}</strong><br>
-                    CPF: ${paciente.cpf}<br>
-                    Telefone: ${paciente.telefone || 'Não informado'}
-                `;
-                document.getElementById('infoPacienteDiv').style.display = 'block';
+                if (data.data.length === 1) {
+                    // Apenas um paciente encontrado
+                    selecionarPaciente(data.data[0]);
+                } else {
+                    // Múltiplos pacientes encontrados
+                    mostrarListaPacientes(data.data);
+                }
             } else {
                 alert('❌ Nenhum paciente encontrado');
                 document.getElementById('infoPacienteDiv').style.display = 'none';
@@ -866,6 +946,55 @@ function buscarPacientes() {
             console.error('Erro:', error);
             alert('❌ Erro ao buscar paciente');
         });
+}
+
+// Selecionar paciente específico
+function selecionarPaciente(paciente) {
+    document.getElementById('pacienteId').value = paciente.id;
+    document.getElementById('infoPaciente').innerHTML = `
+        <strong>${paciente.nome}</strong><br>
+        CPF: ${paciente.cpf}<br>
+        Telefone: ${paciente.telefone || 'Não informado'}
+    `;
+    document.getElementById('infoPacienteDiv').style.display = 'block';
+    
+    // Esconder lista de seleção se estiver visível
+    const listaPacientes = document.getElementById('listaPacientes');
+    if (listaPacientes) {
+        listaPacientes.style.display = 'none';
+    }
+}
+
+// Mostrar lista de pacientes para seleção
+function mostrarListaPacientes(pacientes) {
+    let listaHtml = '<div id="listaPacientes" style="border: 1px solid #d1d5db; border-radius: 6px; background: white; max-height: 200px; overflow-y: auto; margin-top: 5px;">';
+    
+    pacientes.forEach((paciente, index) => {
+        listaHtml += `
+            <div onclick="selecionarPaciente({id: ${paciente.id}, nome: '${paciente.nome}', cpf: '${paciente.cpf}', telefone: '${paciente.telefone || ''}'})" 
+                 style="padding: 10px; border-bottom: 1px solid #e5e7eb; cursor: pointer; hover:background-color: #f3f4f6;" 
+                 onmouseover="this.style.backgroundColor='#f3f4f6'" 
+                 onmouseout="this.style.backgroundColor='white'">
+                <strong>${paciente.nome}</strong><br>
+                <small>CPF: ${paciente.cpf} | Tel: ${paciente.telefone || 'Não informado'}</small>
+            </div>
+        `;
+    });
+    
+    listaHtml += '</div>';
+    
+    // Remover lista anterior se existir
+    const listaExistente = document.getElementById('listaPacientes');
+    if (listaExistente) {
+        listaExistente.remove();
+    }
+    
+    // Adicionar nova lista após o campo de busca
+    const campoBusca = document.getElementById('buscaPaciente').parentElement;
+    campoBusca.insertAdjacentHTML('afterend', listaHtml);
+    
+    // Esconder info do paciente
+    document.getElementById('infoPacienteDiv').style.display = 'none';
 }
 
 // Event listeners simplificados
@@ -907,6 +1036,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`Ação ${action} clicada para ID:`, id);
             
             switch(action) {
+                case 'detalhes':
+                    verDetalhesAgendamento(id);
+                    break;
                 case 'remarcar':
                     remarcarAgendamento(id);
                     break;
@@ -933,7 +1065,12 @@ function editarProdutosAgendamento(id) {
                 agendamentoEditando = id;
                 
                 // Alterar título do modal
-                document.getElementById('modalTitle').textContent = 'Editar Produtos/Procedimentos';
+                document.getElementById('modalTitle').textContent = 'Editar Apenas Produtos/Procedimentos';
+                
+                // Adicionar aviso no modal
+                const avisoHtml = '<div id="avisoEdicao" style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 10px; margin-bottom: 15px; color: #92400e;"><strong>⚠️ MODO DE EDIÇÃO RESTRITA:</strong><br>Apenas produtos e procedimentos podem ser editados. Para alterar data/hora use o botão de remarcar.</div>';
+                const modalBody = document.querySelector('#modalAgendamento form > div');
+                modalBody.insertAdjacentHTML('afterbegin', avisoHtml);
                 
                 // Preencher apenas dados básicos (não editáveis)
                 document.getElementById('pacienteId').value = agendamento.paciente_id;
@@ -1029,5 +1166,120 @@ function excluirAgendamento(id) {
     });
 }
 
+// Variável global para armazenar ID do agendamento sendo reagendado
+let agendamentoReagendandoId = null;
+
+// Funções para controlar modal de detalhes
+function fecharModalDetalhes() {
+    document.getElementById('modalDetalhes').style.display = 'none';
+}
+
+// Funções para controlar modal de reagendar
+function fecharModalReagendar() {
+    document.getElementById('modalReagendar').style.display = 'none';
+    agendamentoReagendandoId = null;
+}
+
+// Confirmar reagendamento
+function confirmarReagendamento(event) {
+    event.preventDefault();
+    
+    if (!agendamentoReagendandoId) {
+        alert('❌ Erro: ID do agendamento não encontrado');
+        return;
+    }
+    
+    const novaData = document.getElementById('novaDataReagendar').value;
+    const novaHora = document.getElementById('novaHoraReagendar').value;
+    
+    if (!novaData || !novaHora) {
+        alert('❌ Por favor, preencha data e hora');
+        return;
+    }
+    
+    const novaDataHora = `${novaData} ${novaHora}:00`;
+    
+    // Buscar dados do agendamento para enviar profissional_id
+    fetch(`/sistema/agendamentos/${agendamentoReagendandoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const agendamento = data.data;
+                
+                // Atualizar no backend
+                fetch(`/sistema/agendamentos/${agendamentoReagendandoId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        data_agendamento: novaDataHora,
+                        profissional_id: agendamento.profissional_id
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('✅ Agendamento reagendado com sucesso!');
+                        fecharModalReagendar();
+                        buscarAgendamentos();
+                    } else {
+                        alert('❌ ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('❌ Erro ao reagendar agendamento');
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('❌ Erro ao carregar dados do agendamento');
+        });
+}
 
 </script>
+
+<!-- Modal de Detalhes -->
+<div id="modalDetalhes" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: white;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">📋 Detalhes do Agendamento</h3>
+            <button onclick="fecharModalDetalhes()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 20px;">
+            <div id="conteudoDetalhes"></div>
+        </div>
+        <div style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; background: white;">
+            <button onclick="fecharModalDetalhes()" style="padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer;">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Reagendar -->
+<div id="modalReagendar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 8px; width: 90%; max-width: 500px; overflow: hidden;">
+        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">📅 Reagendar Atendimento</h3>
+            <button onclick="fecharModalReagendar()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+        </div>
+        <form id="formReagendar" onsubmit="confirmarReagendamento(event)">
+            <div style="padding: 20px;">
+                <div id="infoReagendamento" style="margin-bottom: 20px; padding: 12px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px;"></div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Nova Data *</label>
+                    <input type="date" id="novaDataReagendar" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Nova Hora *</label>
+                    <input type="time" id="novaHoraReagendar" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                </div>
+            </div>
+            <div style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="fecharModalReagendar()" style="padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="submit" style="padding: 10px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">Reagendar</button>
+            </div>
+        </form>
+    </div>
+</div>
