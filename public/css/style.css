@@ -1,7 +1,7 @@
-/* Página de Login Responsiva - Tema Marítimo */
+/* Página de Login Responsiva - Tema Clínica de Estética */
 .login-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #4facfe 100%);
+    background: linear-gradient(135deg, #3498db 0%, #5dade2 50%, #85c1e9 100%);
     position: relative;
     overflow: hidden;
 }
@@ -22,7 +22,7 @@
 
 /* Seção de Boas-vindas */
 .welcome-section {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
     position: relative;
 }
 
@@ -34,6 +34,19 @@
     display: inline-block;
     margin: 0 10px;
     opacity: 0.9;
+}
+
+/* Cores personalizadas para ícones de estética */
+.text-pink {
+    color: #85c1e9 !important;
+}
+
+.text-rose {
+    color: #a9dfbf !important;
+}
+
+.text-green {
+    color: #f7dc6f !important;
 }
 
 .info-item {
