@@ -111,30 +111,67 @@
                         </div>
                     </div>
                     
-                    <div class="anamnese-form">
-                        <div class="form-section">
-                            <h4>Queixa Principal</h4>
-                            <textarea id="queixaPrincipal" class="form-textarea" placeholder="Descreva a queixa principal do paciente..."></textarea>
-                        </div>
-                        
-                        <div class="form-section">
-                            <h4>História da Doença Atual</h4>
-                            <textarea id="historiaDoenca" class="form-textarea" placeholder="Descreva a história da doença atual..."></textarea>
-                        </div>
-                        
-                        <div class="form-section">
-                            <h4>Antecedentes Pessoais</h4>
-                            <textarea id="antecedentesPessoais" class="form-textarea" placeholder="Antecedentes médicos, cirúrgicos, alergias..."></textarea>
-                        </div>
-                        
-                        <div class="form-section">
-                            <h4>Medicamentos em Uso</h4>
-                            <textarea id="medicamentosUso" class="form-textarea" placeholder="Liste os medicamentos que o paciente está usando..."></textarea>
-                        </div>
-                        
-                        <div class="form-section">
-                            <h4>Exame Físico</h4>
-                            <textarea id="exameFisico" class="form-textarea" placeholder="Descreva os achados do exame físico..."></textarea>
+                    <div class="anamnese-form-modern">
+                        <div class="anamnese-grid">
+                            <div class="anamnese-card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="fas fa-comment-medical"></i>
+                                    </div>
+                                    <h4>Queixa Principal</h4>
+                                </div>
+                                <div class="card-content">
+                                    <textarea id="queixaPrincipal" class="anamnese-textarea" placeholder="Descreva a queixa principal do paciente..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="anamnese-card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="fas fa-history"></i>
+                                    </div>
+                                    <h4>História da Doença Atual</h4>
+                                </div>
+                                <div class="card-content">
+                                    <textarea id="historiaDoenca" class="anamnese-textarea" placeholder="Descreva a história da doença atual..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="anamnese-card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="fas fa-user-clock"></i>
+                                    </div>
+                                    <h4>Antecedentes Pessoais</h4>
+                                </div>
+                                <div class="card-content">
+                                    <textarea id="antecedentesPessoais" class="anamnese-textarea" placeholder="Antecedentes médicos, cirúrgicos, alergias..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="anamnese-card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="fas fa-pills"></i>
+                                    </div>
+                                    <h4>Medicamentos em Uso</h4>
+                                </div>
+                                <div class="card-content">
+                                    <textarea id="medicamentosUso" class="anamnese-textarea" placeholder="Liste os medicamentos que o paciente está usando..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="anamnese-card full-width">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="fas fa-stethoscope"></i>
+                                    </div>
+                                    <h4>Exame Físico</h4>
+                                </div>
+                                <div class="card-content">
+                                    <textarea id="exameFisico" class="anamnese-textarea" placeholder="Descreva os achados do exame físico..."></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2111,6 +2148,216 @@ function getStatusText(status) {
     }
 }
 </script>
+
+<style>
+/* Estilos Modernos para Anamnese */
+.anamnese-form-modern {
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.anamnese-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.anamnese-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.anamnese-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    border-color: #3b82f6;
+}
+
+.anamnese-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 20px 15px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
+
+.card-icon i {
+    font-size: 18px;
+    color: white;
+}
+
+.card-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.anamnese-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    resize: vertical;
+    transition: all 0.3s ease;
+    background: #fafbfc;
+}
+
+.anamnese-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.anamnese-textarea::placeholder {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Cores específicas para cada card */
+.anamnese-card:nth-child(1) .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.anamnese-card:nth-child(2) .card-header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.anamnese-card:nth-child(3) .card-header {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.anamnese-card:nth-child(4) .card-header {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.anamnese-card:nth-child(5) .card-header {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .anamnese-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .anamnese-form-modern {
+        padding: 15px;
+    }
+    
+    .card-header {
+        padding: 15px;
+    }
+    
+    .card-content {
+        padding: 15px;
+    }
+    
+    .anamnese-textarea {
+        min-height: 100px;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .card-icon {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .card-icon i {
+        font-size: 16px;
+    }
+    
+    .card-header h4 {
+        font-size: 14px;
+    }
+}
+
+/* Animações suaves */
+.anamnese-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.anamnese-card:nth-child(1) { animation-delay: 0.1s; }
+.anamnese-card:nth-child(2) { animation-delay: 0.2s; }
+.anamnese-card:nth-child(3) { animation-delay: 0.3s; }
+.anamnese-card:nth-child(4) { animation-delay: 0.4s; }
+.anamnese-card:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estados de foco melhorados */
+.anamnese-textarea:focus {
+    transform: scale(1.02);
+}
+
+/* Indicador de preenchimento */
+.anamnese-textarea:not(:placeholder-shown) {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.anamnese-textarea:not(:placeholder-shown) + .card-header::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #10b981;
+    font-weight: bold;
+    font-size: 18px;
+}
+</style>
 
 <!-- Scripts modulares - ordem importante para dependências -->
 <script src="/js/atendimento/config.js"></script>

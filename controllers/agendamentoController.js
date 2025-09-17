@@ -138,18 +138,18 @@ class AgendamentoController {
                     }
                 });
             } else {
-                // Processamento normal (para página de agendamentos)
+              
                 agendamentosProcessados = agendamentos.map(agendamento => {
                     const agendamentoData = agendamento.toJSON();
                     
-                    // Adicionar campos virtuais
+                   
                     if (agendamentoData.data_agendamento) {
                         const data = new Date(agendamentoData.data_agendamento);
                         agendamentoData.horario = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                         agendamentoData.valor_total = agendamentoData.valor_final || agendamentoData.valor || 0;
                     }
                     
-                    // Se não tem produto direto, usar o primeiro produto dos itens
+               
                     if (!agendamentoData.produto && agendamentoData.itens && agendamentoData.itens.length > 0) {
                         const primeiroItem = agendamentoData.itens[0];
                         if (primeiroItem.produto) {

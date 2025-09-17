@@ -183,5 +183,7 @@ router.get('/atendimento/:id', authController.isLoggedIn, async (req, res) => {
 router.get('/financeiro', authController.isLoggedIn, FinanceiroController.pageFinanceiro);
 router.get('/financeiro/dashboard', authController.isLoggedIn, FinanceiroController.buscarDashboardFinanceiro);
 router.get('/financeiro/relatorio', authController.isLoggedIn, FinanceiroController.buscarRelatorioDetalhado);
+router.get('/financeiro/pagamentos-paciente/:id', authController.isLoggedIn, FinanceiroController.buscarPagamentosPaciente);
+router.post('/financeiro/gerar-comprovante', authController.isLoggedIn, FinanceiroController.gerarComprovante);
 
 module.exports = router;

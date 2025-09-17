@@ -312,6 +312,16 @@ class FinanceiroController {
                                 model: Usuario,
                                 as: 'profissional',
                                 attributes: ['id', 'nome']
+                            },
+                            {
+                                model: require('../models').ItemAgendamento,
+                                as: 'itens',
+                                attributes: ['quantidade', 'valor_unitario', 'valor_total'],
+                                include: [{
+                                    model: Produto,
+                                    as: 'produto',
+                                    attributes: ['id', 'nome']
+                                }]
                             }
                         ]
                     }
@@ -343,6 +353,411 @@ class FinanceiroController {
                 message: 'Erro ao buscar relatório detalhado'
             });
         }
+    }
+
+    // Buscar pagamentos de um paciente específico
+    static async buscarPagamentosPaciente(req, res) {
+        try {
+            const { id } = req.params;
+
+            const pagamentos = await Pagamento.findAll({
+                where: {
+                    paciente_id: id
+                },
+                include: [
+                    {
+                        model: Paciente,
+                        as: 'paciente',
+                        attributes: ['id', 'nome', 'cpf']
+                    },
+                    {
+                        model: Usuario,
+                        as: 'confirmador',
+                        attributes: ['id', 'nome']
+                    },
+                    {
+                        model: Agendamento,
+                        as: 'agendamento',
+                        attributes: ['id', 'data_agendamento'],
+                        include: [
+                            {
+                                model: Produto,
+                                as: 'produto',
+                                attributes: ['id', 'nome']
+                            },
+                            {
+                                model: require('../models').ItemAgendamento,
+                                as: 'itens',
+                                attributes: ['quantidade', 'valor_unitario'],
+                                include: [{
+                                    model: Produto,
+                                    as: 'produto',
+                                    attributes: ['id', 'nome']
+                                }]
+                            }
+                        ]
+                    }
+                ],
+                order: [['criado_em', 'DESC']]
+            });
+
+            res.json({
+                success: true,
+                data: pagamentos
+            });
+
+        } catch (error) {
+            console.error('Erro ao buscar pagamentos do paciente:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao buscar pagamentos do paciente'
+            });
+        }
+    }
+
+    // Gerar comprovante de pagamento em PDF
+    static async gerarComprovante(req, res) {
+        try {
+            // Processar dados do formulário ou JSON
+            let paciente, pagamentos;
+            
+            if (req.body.paciente && typeof req.body.paciente === 'string') {
+                // Dados vindos do formulário HTML
+                paciente = JSON.parse(req.body.paciente);
+                pagamentos = JSON.parse(req.body.pagamentos);
+            } else {
+                // Dados vindos do JSON (fallback)
+                paciente = req.body.paciente;
+                pagamentos = req.body.pagamentos;
+            }
+            const { Clinica } = require('../models');
+
+            // Buscar dados da clínica
+            const clinica = await Clinica.findOne();
+
+            // Buscar pagamentos selecionados
+            const pagamentosSelecionados = await Pagamento.findAll({
+                where: {
+                    id: pagamentos
+                },
+                include: [
+                    {
+                        model: Paciente,
+                        as: 'paciente',
+                        attributes: ['id', 'nome', 'cpf', 'telefone', 'email']
+                    },
+                    {
+                        model: Usuario,
+                        as: 'confirmador',
+                        attributes: ['id', 'nome']
+                    },
+                    {
+                        model: Agendamento,
+                        as: 'agendamento',
+                        attributes: ['id', 'data_agendamento'],
+                        include: [
+                            {
+                                model: Produto,
+                                as: 'produto',
+                                attributes: ['id', 'nome']
+                            },
+                            {
+                                model: Usuario,
+                                as: 'profissional',
+                                attributes: ['id', 'nome']
+                            },
+                            {
+                                model: require('../models').ItemAgendamento,
+                                as: 'itens',
+                                attributes: ['quantidade', 'valor_unitario', 'valor_total'],
+                                include: [{
+                                    model: Produto,
+                                    as: 'produto',
+                                    attributes: ['id', 'nome']
+                                }]
+                            }
+                        ]
+                    }
+                ],
+                order: [['data_pagamento', 'ASC']]
+            });
+
+            // Verificar se encontrou pagamentos
+            if (!pagamentosSelecionados || pagamentosSelecionados.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Nenhum pagamento encontrado com os IDs fornecidos'
+                });
+            }
+
+            // Validar dados antes de gerar HTML
+            const pacienteData = pagamentosSelecionados[0]?.paciente;
+            if (!pacienteData) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Dados do paciente não encontrados nos pagamentos selecionados'
+                });
+            }
+
+            // Gerar HTML do comprovante
+            const htmlComprovante = FinanceiroController.gerarHtmlComprovante(clinica, pacienteData, pagamentosSelecionados);
+            
+            // Validar se o HTML foi gerado corretamente
+            if (!htmlComprovante || htmlComprovante.length < 100) {
+                console.error('HTML gerado é muito pequeno ou vazio');
+                return res.status(500).json({
+                    success: false,
+                    message: 'Erro na geração do HTML do comprovante'
+                });
+            }
+            
+            console.log('HTML gerado com sucesso, iniciando conversão para PDF...');
+            console.log('Tamanho do HTML:', htmlComprovante.length, 'caracteres');
+
+            // Retornar HTML para impressão no navegador
+            console.log('Retornando HTML para impressão no navegador');
+            
+            // Adicionar estilos específicos para impressão
+            const htmlCompletoParaImpressao = htmlComprovante.replace(
+                '</head>',
+                `
+                <style media="print">
+                    @page {
+                        size: A4;
+                        margin: 20mm;
+                    }
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                </style>
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                        }, 500);
+                    };
+                </script>
+                </head>`
+            );
+            
+            // Enviar HTML para o navegador
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.send(htmlCompletoParaImpressao);
+
+        } catch (error) {
+            console.error('Erro ao gerar comprovante:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao gerar comprovante'
+            });
+        }
+    }
+
+    // Função para escapar caracteres HTML
+    static escapeHtml(text) {
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // Gerar HTML do comprovante
+    static gerarHtmlComprovante(clinica, paciente, pagamentos) {
+        const totalGeral = pagamentos.reduce((sum, p) => sum + parseFloat(p.valor_final), 0);
+        const dataEmissao = new Date().toLocaleDateString('pt-BR');
+        
+        // Escapar dados para evitar problemas no HTML
+        const clinicaNome = FinanceiroController.escapeHtml(clinica?.nome || 'Clínica');
+        const clinicaEndereco = FinanceiroController.escapeHtml(clinica?.endereco || '');
+        const clinicaTelefone = FinanceiroController.escapeHtml(clinica?.telefone || '');
+        const clinicaEmail = FinanceiroController.escapeHtml(clinica?.email || '');
+        const pacienteNome = FinanceiroController.escapeHtml(paciente.nome);
+        const pacienteCpf = FinanceiroController.escapeHtml(paciente.cpf);
+        const pacienteTelefone = FinanceiroController.escapeHtml(paciente.telefone || 'Não informado');
+        const pacienteEmail = FinanceiroController.escapeHtml(paciente.email || 'Não informado');
+        
+        return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Comprovante de Pagamento</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    color: #333;
+                }
+                .header {
+                    text-align: center;
+                    border-bottom: 2px solid #2563eb;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                }
+                .clinica-nome {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #2563eb;
+                    margin-bottom: 5px;
+                }
+                .documento-titulo {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-top: 15px;
+                }
+                .info-section {
+                    margin-bottom: 25px;
+                }
+                .info-title {
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #2563eb;
+                    margin-bottom: 10px;
+                    border-bottom: 1px solid #e5e7eb;
+                    padding-bottom: 5px;
+                }
+                .info-row {
+                    margin-bottom: 5px;
+                }
+                .table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                .table th, .table td {
+                    border: 1px solid #ddd;
+                    padding: 12px;
+                    text-align: left;
+                }
+                .table th {
+                    background-color: #f8f9fa;
+                    font-weight: bold;
+                }
+                .total-row {
+                    background-color: #f0f9ff;
+                    font-weight: bold;
+                }
+                .footer {
+                    margin-top: 40px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #6b7280;
+                    border-top: 1px solid #e5e7eb;
+                    padding-top: 20px;
+                }
+                .status-pago {
+                    color: #059669;
+                    font-weight: bold;
+                }
+                .status-pendente {
+                    color: #d97706;
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="clinica-nome">${clinicaNome}</div>
+                <div>${clinicaEndereco}</div>
+                <div>${clinicaTelefone}${clinicaTelefone && clinicaEmail ? ' | ' : ''}${clinicaEmail}</div>
+                <div class="documento-titulo">COMPROVANTE DE PAGAMENTO</div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-title">Dados do Paciente</div>
+                <div class="info-row"><strong>Nome:</strong> ${pacienteNome}</div>
+                <div class="info-row"><strong>CPF:</strong> ${pacienteCpf}</div>
+                <div class="info-row"><strong>Telefone:</strong> ${pacienteTelefone}</div>
+                <div class="info-row"><strong>Email:</strong> ${pacienteEmail}</div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-title">Detalhes dos Pagamentos</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Procedimento</th>
+                            <th>Profissional</th>
+                            <th>Status</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pagamentos.map(pagamento => {
+                            const profissional = pagamento.agendamento?.profissional?.nome || 'Não informado';
+                            const data = pagamento.data_pagamento ? 
+                                new Date(pagamento.data_pagamento).toLocaleDateString('pt-BR') : 
+                                'Pendente';
+                            const status = pagamento.status === 'pago' ? 
+                                '<span class="status-pago">PAGO</span>' : 
+                                '<span class="status-pendente">PENDENTE</span>';
+                            
+                            // Verificar se há itens do agendamento (múltiplos procedimentos)
+                            let procedimentos = [];
+                            if (pagamento.agendamento?.itens && pagamento.agendamento.itens.length > 0) {
+                                procedimentos = pagamento.agendamento.itens.map(item => ({
+                                    nome: FinanceiroController.escapeHtml(item.produto?.nome || 'Procedimento'),
+                                    quantidade: item.quantidade || 1,
+                                    valor: item.valor_total || item.valor_unitario || 0
+                                }));
+                            } else if (pagamento.agendamento?.produto?.nome) {
+                                procedimentos = [{
+                                    nome: FinanceiroController.escapeHtml(pagamento.agendamento.produto.nome),
+                                    quantidade: 1,
+                                    valor: pagamento.valor_final
+                                }];
+                            } else {
+                                procedimentos = [{
+                                    nome: 'Procedimento',
+                                    quantidade: 1,
+                                    valor: pagamento.valor_final
+                                }];
+                            }
+                            
+                            // Escapar dados do profissional
+                            const profissionalEscapado = FinanceiroController.escapeHtml(profissional);
+                            
+                            // Gerar linhas para cada procedimento
+                            return procedimentos.map((proc, index) => {
+                                const isFirstRow = index === 0;
+                                const valorFormatado = parseFloat(proc.valor || 0).toFixed(2).replace('.', ',');
+                                return `
+                                    <tr>
+                                        <td>${isFirstRow ? data : ''}</td>
+                                        <td>${proc.nome}${proc.quantidade > 1 ? ` (${proc.quantidade}x)` : ''}</td>
+                                        <td>${isFirstRow ? profissionalEscapado : ''}</td>
+                                        <td>${status}</td>
+                                        <td>R$ ${valorFormatado}</td>
+                                    </tr>
+                                `;
+                            }).join('');
+                        }).join('')}
+                        <tr class="total-row">
+                            <td colspan="4"><strong>TOTAL GERAL</strong></td>
+                            <td><strong>R$ ${totalGeral.toFixed(2).replace('.', ',')}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="footer">
+                <p>Comprovante emitido em ${dataEmissao}</p>
+                <p>Este documento comprova os pagamentos realizados pelos procedimentos listados acima.</p>
+                <p>${clinicaNome} - Todos os direitos reservados</p>
+            </div>
+        </body>
+        </html>`;
     }
 }
 

@@ -51,29 +51,72 @@
                 <i class="fas fa-dollar-sign"></i>
                 Controle Financeiro
             </h1>
-            <button class="btn btn-secondary" onclick="abrirRelatorioDetalhado()">
-                <i class="fas fa-file-alt"></i>
-                Relatório Completo
+            <button class="btn btn-primary" onclick="abrirModalComprovante()">
+                <i class="fas fa-file-invoice"></i>
+                Gerar Comprovante
             </button>
         </div>
 
-        <!-- Filtros -->
+        <!-- Filtros Modernos -->
         <div class="filters-section">
-            <div class="filters-row">
-                <div class="form-group">
-                    <label class="form-label">Período</label>
-                    <select id="periodoSelect" class="form-select" onchange="debouncedCarregarDashboard()">
-                        <option value="hoje">Hoje</option>
-                        <option value="semana">Esta Semana</option>
-                        <option value="mes" selected>Este Mês</option>
-                        <option value="ano">Este Ano</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <button class="btn btn-primary" onclick="atualizarDados()">
+            <div class="period-filter-container">
+                <div class="period-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Filtrar por Período</h3>
+                    <button class="btn btn-primary btn-sm" onclick="atualizarDados()">
                         <i class="fas fa-sync-alt"></i> Atualizar
                     </button>
                 </div>
+                
+                <div class="period-buttons">
+                    <button class="period-btn" data-period="hoje" onclick="selecionarPeriodo('hoje')">
+                        <i class="fas fa-calendar-day"></i>
+                        <span>Hoje</span>
+                    </button>
+                    <button class="period-btn" data-period="semana" onclick="selecionarPeriodo('semana')">
+                        <i class="fas fa-calendar-week"></i>
+                        <span>Esta Semana</span>
+                    </button>
+                    <button class="period-btn active" data-period="mes" onclick="selecionarPeriodo('mes')">
+                        <i class="fas fa-calendar"></i>
+                        <span>Este Mês</span>
+                    </button>
+                    <button class="period-btn" data-period="ano" onclick="selecionarPeriodo('ano')">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Este Ano</span>
+                    </button>
+                    <button class="period-btn" data-period="personalizado" onclick="selecionarPeriodo('personalizado')">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Personalizado</span>
+                    </button>
+                </div>
+                
+                <div class="custom-date-range" id="customDateRange" style="display: none;">
+                    <div class="date-inputs">
+                        <div class="date-input-group">
+                            <label class="date-label">Data Inicial</label>
+                            <input type="date" id="dataInicio" class="date-input">
+                        </div>
+                        <div class="date-separator">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="date-input-group">
+                            <label class="date-label">Data Final</label>
+                            <input type="date" id="dataFim" class="date-input">
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="aplicarPeriodoPersonalizado()">
+                            <i class="fas fa-check"></i> Aplicar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Campo hidden para manter compatibilidade -->
+                <select id="periodoSelect" style="display: none;">
+                    <option value="hoje">Hoje</option>
+                    <option value="semana">Esta Semana</option>
+                    <option value="mes" selected>Este Mês</option>
+                    <option value="ano">Este Ano</option>
+                    <option value="personalizado">Personalizado</option>
+                </select>
             </div>
         </div>
 
@@ -170,6 +213,60 @@
     </div>
 </div>
 
+<!-- Modal Comprovante de Pagamento -->
+<div id="modalComprovante" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 8px; width: 95%; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;"><i class="fas fa-file-invoice"></i> Gerar Comprovante de Pagamento</h3>
+            <button onclick="fecharModalComprovante()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+        </div>
+        
+        <div style="padding: 20px; flex: 1; overflow-y: auto;">
+            <!-- Busca de Paciente -->
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Buscar Paciente</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="buscaPacienteComprovante" class="form-input" placeholder="Digite o nome ou CPF do paciente..." style="flex: 1;" onkeyup="buscarPacientesComprovante()">
+                    <button class="btn btn-secondary" onclick="buscarPacientesComprovante()">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Lista de Pacientes -->
+            <div id="listaPacientesComprovante" style="margin-bottom: 20px; display: none;">
+                <h4>Selecione o Paciente:</h4>
+                <div id="resultadosPacientes" style="max-height: 150px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 4px;">
+                    <!-- Resultados da busca -->
+                </div>
+            </div>
+            
+            <!-- Pagamentos do Paciente -->
+            <div id="pagamentosPacienteComprovante" style="display: none;">
+                <h4 id="nomePacienteSelecionado">Pagamentos de:</h4>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                        <input type="checkbox" id="selecionarTodos" onchange="selecionarTodosPagamentos()"> 
+                        Selecionar Todos
+                    </label>
+                </div>
+                <div id="listaPagamentos" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 4px; padding: 10px;">
+                    <!-- Lista de pagamentos -->
+                </div>
+                
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>Total Selecionado: <span id="totalSelecionado">R$ 0,00</span></strong>
+                    </div>
+                    <button class="btn btn-success" onclick="gerarComprovante()" id="btnGerarComprovante" disabled>
+                        <i class="fas fa-file-pdf"></i> Gerar Comprovante PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Relatório Detalhado -->
 <div id="modalRelatorio" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
     <div style="background: white; border-radius: 8px; width: 95%; max-width: 1200px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
@@ -229,6 +326,9 @@
 let receitasChart = null;
 let procedimentosChart = null;
 let isLoadingDashboard = false;
+let periodoAtual = 'mes';
+let dataInicioPersonalizada = null;
+let dataFimPersonalizada = null;
 
 // Carregar dados ao inicializar a página
 document.addEventListener('DOMContentLoaded', function() {
@@ -269,9 +369,22 @@ function carregarDashboard() {
     }
     
     isLoadingDashboard = true;
-    const periodo = document.getElementById('periodoSelect').value;
     
-    fetch(`/sistema/financeiro/dashboard?periodo=${periodo}`)
+    // Construir URL com parâmetros apropriados
+    let url = '/sistema/financeiro/dashboard';
+    const params = new URLSearchParams();
+    
+    if (periodoAtual === 'personalizado' && dataInicioPersonalizada && dataFimPersonalizada) {
+        params.append('periodo', 'personalizado');
+        params.append('dataInicio', dataInicioPersonalizada);
+        params.append('dataFim', dataFimPersonalizada);
+    } else {
+        params.append('periodo', periodoAtual);
+    }
+    
+    url += '?' + params.toString();
+    
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -490,6 +603,251 @@ function atualizarDados() {
     }
 }
 
+// Funções do Modal de Comprovante
+let pacienteSelecionado = null;
+let pagamentosSelecionados = [];
+
+function abrirModalComprovante() {
+    document.getElementById('modalComprovante').style.display = 'flex';
+    limparModalComprovante();
+}
+
+function fecharModalComprovante() {
+    document.getElementById('modalComprovante').style.display = 'none';
+    limparModalComprovante();
+}
+
+function limparModalComprovante() {
+    document.getElementById('buscaPacienteComprovante').value = '';
+    document.getElementById('listaPacientesComprovante').style.display = 'none';
+    document.getElementById('pagamentosPacienteComprovante').style.display = 'none';
+    pacienteSelecionado = null;
+    pagamentosSelecionados = [];
+    atualizarTotalSelecionado();
+}
+
+function buscarPacientesComprovante() {
+    const termo = document.getElementById('buscaPacienteComprovante').value.trim();
+    
+    if (termo.length < 2) {
+        document.getElementById('listaPacientesComprovante').style.display = 'none';
+        return;
+    }
+    
+    fetch(`/sistema/pacientes/selecao?busca=${encodeURIComponent(termo)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                exibirResultadosPacientes(data.data);
+            } else {
+                console.error('Erro ao buscar pacientes:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+}
+
+function exibirResultadosPacientes(pacientes) {
+    const container = document.getElementById('resultadosPacientes');
+    
+    if (pacientes.length === 0) {
+        container.innerHTML = '<div style="padding: 10px; text-align: center; color: #6b7280;">Nenhum paciente encontrado</div>';
+    } else {
+        container.innerHTML = pacientes.map(paciente => `
+            <div style="padding: 10px; border-bottom: 1px solid #f3f4f6; cursor: pointer; hover: background-color: #f9fafb;" 
+                 onclick="selecionarPaciente(${paciente.id}, '${paciente.nome}', '${paciente.cpf}')">
+                <div style="font-weight: 600;">${paciente.nome}</div>
+                <div style="font-size: 14px; color: #6b7280;">CPF: ${paciente.cpf}</div>
+            </div>
+        `).join('');
+    }
+    
+    document.getElementById('listaPacientesComprovante').style.display = 'block';
+}
+
+function selecionarPaciente(id, nome, cpf) {
+    pacienteSelecionado = { id, nome, cpf };
+    document.getElementById('listaPacientesComprovante').style.display = 'none';
+    document.getElementById('nomePacienteSelecionado').textContent = `Pagamentos de: ${nome}`;
+    
+    buscarPagamentosPaciente(id);
+}
+
+function buscarPagamentosPaciente(pacienteId) {
+    fetch(`/sistema/financeiro/pagamentos-paciente/${pacienteId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                exibirPagamentosPaciente(data.data);
+            } else {
+                console.error('Erro ao buscar pagamentos:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+}
+
+function exibirPagamentosPaciente(pagamentos) {
+    const container = document.getElementById('listaPagamentos');
+    
+    if (pagamentos.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px;">Nenhum pagamento encontrado para este paciente</div>';
+    } else {
+        container.innerHTML = pagamentos.map(pagamento => `
+            <div style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px; margin-bottom: 10px; background: ${pagamento.status === 'pago' ? '#f0f9ff' : '#fef3c7'};">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" value="${pagamento.id}" onchange="togglePagamento(${pagamento.id}, ${pagamento.valor_final})">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">${pagamento.agendamento?.produto?.nome || 'Procedimento'}</div>
+                        <div style="font-size: 14px; color: #6b7280;">
+                            Data: ${pagamento.data_pagamento ? new Date(pagamento.data_pagamento).toLocaleDateString('pt-BR') : 'Pendente'} | 
+                            Status: ${pagamento.status === 'pago' ? 'Pago' : 'Pendente'} | 
+                            Valor: ${formatarMoeda(pagamento.valor_final)}
+                        </div>
+                    </div>
+                </label>
+            </div>
+        `).join('');
+    }
+    
+    document.getElementById('pagamentosPacienteComprovante').style.display = 'block';
+    pagamentosSelecionados = [];
+    atualizarTotalSelecionado();
+}
+
+function togglePagamento(pagamentoId, valor) {
+    const checkbox = document.querySelector(`input[value="${pagamentoId}"]`);
+    
+    if (checkbox.checked) {
+        if (!pagamentosSelecionados.find(p => p.id === pagamentoId)) {
+            pagamentosSelecionados.push({ id: pagamentoId, valor: parseFloat(valor) });
+        }
+    } else {
+        pagamentosSelecionados = pagamentosSelecionados.filter(p => p.id !== pagamentoId);
+    }
+    
+    atualizarTotalSelecionado();
+}
+
+function selecionarTodosPagamentos() {
+    const selecionarTodos = document.getElementById('selecionarTodos').checked;
+    const checkboxes = document.querySelectorAll('#listaPagamentos input[type="checkbox"]');
+    
+    pagamentosSelecionados = [];
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selecionarTodos;
+        if (selecionarTodos) {
+            const valor = parseFloat(checkbox.closest('div').querySelector('div').textContent.match(/R\$ ([\d.,]+)/)[1].replace(',', '.'));
+            pagamentosSelecionados.push({ id: parseInt(checkbox.value), valor });
+        }
+    });
+    
+    atualizarTotalSelecionado();
+}
+
+function atualizarTotalSelecionado() {
+    const total = pagamentosSelecionados.reduce((sum, p) => sum + p.valor, 0);
+    document.getElementById('totalSelecionado').textContent = formatarMoeda(total);
+    document.getElementById('btnGerarComprovante').disabled = pagamentosSelecionados.length === 0;
+}
+
+function gerarComprovante() {
+    if (!pacienteSelecionado || pagamentosSelecionados.length === 0) {
+        alert('Selecione um paciente e pelo menos um pagamento.');
+        return;
+    }
+    
+    const dados = {
+        paciente: pacienteSelecionado,
+        pagamentos: pagamentosSelecionados.map(p => p.id)
+    };
+    
+    // Criar formulário para enviar dados via POST em nova aba
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/sistema/financeiro/gerar-comprovante';
+    form.target = '_blank';
+    
+    // Adicionar dados como campos hidden
+    const inputPaciente = document.createElement('input');
+    inputPaciente.type = 'hidden';
+    inputPaciente.name = 'paciente';
+    inputPaciente.value = JSON.stringify(dados.paciente);
+    form.appendChild(inputPaciente);
+    
+    const inputPagamentos = document.createElement('input');
+    inputPagamentos.type = 'hidden';
+    inputPagamentos.name = 'pagamentos';
+    inputPagamentos.value = JSON.stringify(dados.pagamentos);
+    form.appendChild(inputPagamentos);
+    
+    // Adicionar ao DOM e submeter
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
+    alert('Comprovante aberto em nova aba. Use Ctrl+P para imprimir ou salvar como PDF.');
+    fecharModalComprovante();
+}
+
+// Funções do Filtro de Período Moderno
+function selecionarPeriodo(periodo) {
+    // Remover classe active de todos os botões
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Adicionar classe active ao botão selecionado
+    document.querySelector(`[data-period="${periodo}"]`).classList.add('active');
+    
+    // Atualizar período atual
+    periodoAtual = periodo;
+    
+    // Atualizar select hidden para compatibilidade
+    document.getElementById('periodoSelect').value = periodo;
+    
+    // Mostrar/ocultar campos de data personalizada
+    const customDateRange = document.getElementById('customDateRange');
+    if (periodo === 'personalizado') {
+        customDateRange.style.display = 'block';
+        // Definir datas padrão (último mês)
+        const hoje = new Date();
+        const mesPassado = new Date(hoje.getFullYear(), hoje.getMonth() - 1, hoje.getDate());
+        document.getElementById('dataInicio').value = mesPassado.toISOString().split('T')[0];
+        document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+    } else {
+        customDateRange.style.display = 'none';
+        dataInicioPersonalizada = null;
+        dataFimPersonalizada = null;
+        // Carregar dados automaticamente para períodos pré-definidos
+        debouncedCarregarDashboard();
+    }
+}
+
+function aplicarPeriodoPersonalizado() {
+    const dataInicio = document.getElementById('dataInicio').value;
+    const dataFim = document.getElementById('dataFim').value;
+    
+    if (!dataInicio || !dataFim) {
+        alert('Por favor, selecione ambas as datas.');
+        return;
+    }
+    
+    if (new Date(dataInicio) > new Date(dataFim)) {
+        alert('A data inicial deve ser anterior à data final.');
+        return;
+    }
+    
+    dataInicioPersonalizada = dataInicio;
+    dataFimPersonalizada = dataFim;
+    
+    // Carregar dados com período personalizado
+    debouncedCarregarDashboard();
+}
+
 function abrirRelatorioDetalhado() {
     document.getElementById('modalRelatorio').style.display = 'flex';
     
@@ -682,6 +1040,159 @@ function formatarStatus(status) {
 /* Ajustes de Espaçamento */
 .filters-section {
     margin-bottom: 30px;
+}
+
+/* Estilos do Filtro de Período Moderno */
+.period-filter-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.period-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.period-header h3 {
+    margin: 0;
+    color: #374151;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.period-header h3 i {
+    color: #2563eb;
+    margin-right: 8px;
+}
+
+.period-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.period-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    font-size: 14px;
+}
+
+.period-btn:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #f0f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.period-btn.active {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.period-btn i {
+    font-size: 18px;
+}
+
+.period-btn span {
+    font-weight: 500;
+}
+
+.custom-date-range {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.date-inputs {
+    display: flex;
+    align-items: end;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.date-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.date-input {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    transition: border-color 0.3s ease;
+    min-width: 150px;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.date-separator {
+    display: flex;
+    align-items: center;
+    color: #6b7280;
+    font-size: 16px;
+    margin: 0 5px;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .period-buttons {
+        justify-content: center;
+    }
+    
+    .period-btn {
+        min-width: 80px;
+        padding: 10px 12px;
+    }
+    
+    .date-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-separator {
+        align-self: center;
+        transform: rotate(90deg);
+    }
 }
 
 .financial-section {
