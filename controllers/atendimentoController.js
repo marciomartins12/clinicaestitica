@@ -1,4 +1,4 @@
-const { Anamnese, Atestado, Exame, FotoPaciente, Prescricao, Paciente, Clinica } = require('../models');
+const { Anamnese, Atestado, Exame, FotoPaciente, Prescricao, Paciente, Clinica, ItemExame } = require('../models');
 const { Op } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
@@ -134,20 +134,47 @@ class AtendimentoController {
     // Salvar resultados do exame
     static async salvarResultadosExame(req, res) {
         try {
-            const { exame_id, resultados_json, observacoes, status } = req.body;
+            const { exame_id, resultados, observacoes, status } = req.body;
             
             const exame = await Exame.findByPk(exame_id);
             if (!exame) {
                 return res.status(404).json({ success: false, message: 'Exame não encontrado' });
             }
             
+            // Remover resultados existentes
+            await ItemExame.destroy({ where: { exame_id } });
+            
+            // Adicionar novos resultados
+            if (resultados && Array.isArray(resultados) && resultados.length > 0) {
+                for (const resultado of resultados) {
+                    if (resultado.chave && resultado.valor) {
+                        await ItemExame.create({
+                            exame_id,
+                            chave: resultado.chave,
+                            valor: resultado.valor,
+                            unidade: resultado.unidade || null,
+                            valor_referencia: resultado.valor_referencia || null,
+                            observacoes: resultado.observacoes || null
+                        });
+                    }
+                }
+            }
+            
+            // Atualizar exame
             await exame.update({
-                resultados_json,
                 observacoes,
                 status: status || 'concluido'
             });
             
-            res.json({ success: true, data: exame });
+            // Buscar exame com resultados
+            const exameAtualizado = await Exame.findByPk(exame_id, {
+                include: [{
+                    model: ItemExame,
+                    as: 'resultados'
+                }]
+            });
+            
+            res.json({ success: true, data: exameAtualizado });
         } catch (error) {
             console.error('Erro ao salvar resultados do exame:', error);
             res.status(500).json({ success: false, message: 'Erro ao salvar resultados do exame' });
@@ -161,6 +188,11 @@ class AtendimentoController {
             
             const exames = await Exame.findAll({
                 where: { paciente_id: pacienteId },
+                include: [{
+                    model: ItemExame,
+                    as: 'resultados',
+                    required: false
+                }],
                 order: [['data_exame', 'DESC']]
             });
             

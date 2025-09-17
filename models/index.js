@@ -15,6 +15,7 @@ const Atestado = require('./Atestado');
 const ItemPrescricao = require('./ItemPrescricao');
 const ItemCombo = require('./ItemCombo');
 const ItemAgendamento = require('./ItemAgendamento');
+const ItemExame = require('./ItemExame');
 const Recado = require('./Recado');
 
 // Definir associações
@@ -55,6 +56,7 @@ FotoPaciente.belongsTo(Agendamento, { foreignKey: 'procedimento_id', as: 'proced
 
 // Associações do Exame
 Exame.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+Exame.hasMany(ItemExame, { foreignKey: 'exame_id', as: 'resultados' });
 
 // Associações da Prescricao
 Prescricao.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
@@ -84,6 +86,9 @@ ItemCombo.belongsTo(Produto, { foreignKey: 'combo_produto_id', as: 'combo_produt
 ItemAgendamento.belongsTo(Agendamento, { foreignKey: 'agendamento_id', as: 'agendamento' });
 ItemAgendamento.belongsTo(Produto, { foreignKey: 'produto_id', as: 'produto' });
 
+// Associações do ItemExame
+ItemExame.belongsTo(Exame, { foreignKey: 'exame_id', as: 'exame' });
+
 // Associações do Recado
 Recado.belongsTo(Usuario, { foreignKey: 'autor_id', as: 'autor' });
 Recado.belongsTo(Usuario, { foreignKey: 'destinatario_id', as: 'destinatario' });
@@ -105,5 +110,6 @@ module.exports = {
     ItemPrescricao,
     ItemCombo,
     ItemAgendamento,
+    ItemExame,
     Recado
 };
