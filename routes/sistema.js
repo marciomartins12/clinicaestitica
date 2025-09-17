@@ -85,9 +85,9 @@ router.get('/produtos', authController.isLoggedIn, async (req, res) => {
     try {
         const user = await Usuario.findByPk(req.session.user.id);
         
-        // Verificar se o usuário não é recepcionista
-        if (user.tipo_usuario === 'recepcionista') {
-            console.log(`Acesso negado à página Produtos para recepcionista ${user.nome}`);
+        // Verificar se o usuário não é atendente
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Produtos para atendente ${user.nome}`);
             return res.redirect('/sistema/dashboard');
         }
         
@@ -146,7 +146,7 @@ router.get('/usuarios/api', authController.isLoggedIn, async (req, res) => {
         const usuarios = await Usuario.findAll({
             where: {
                 id: { [require('sequelize').Op.ne]: req.session.user.id }, // Excluir o usuário atual
-                tipo_usuario: { [require('sequelize').Op.in]: ['profissional', 'recepcionista'] }
+                tipo_usuario: { [require('sequelize').Op.in]: ['profissional', 'atendente'] }
             },
             attributes: ['id', 'nome', 'email', 'cpf', 'rg', 'telefone', 'data_nascimento', 'endereco', 'tipo_usuario', 'data_admissao', 'salario', 'horario_trabalho', 'especialidade', 'registro', 'formacao', 'certificacoes', 'experiencia', 'setor', 'habilidades'],
             order: [['nome', 'ASC']]
@@ -368,9 +368,9 @@ router.get('/atendimento', authController.isLoggedIn, async (req, res) => {
     try {
         const user = await Usuario.findByPk(req.session.user.id);
         
-        // Verificar se o usuário não é recepcionista
-        if (user.tipo_usuario === 'recepcionista') {
-            console.log(`Acesso negado à página Atendimento para recepcionista ${user.nome}`);
+        // Verificar se o usuário não é atendente
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Atendimento para atendente ${user.nome}`);
             return res.redirect('/sistema/dashboard');
         }
         
@@ -399,9 +399,9 @@ router.get('/atendimento/:id', authController.isLoggedIn, async (req, res) => {
         const user = await Usuario.findByPk(req.session.user.id);
         const pacienteId = req.params.id;
         
-        // Verificar se o usuário não é recepcionista
-        if (user.tipo_usuario === 'recepcionista') {
-            console.log(`Acesso negado à página Atendimento do Paciente para recepcionista ${user.nome}`);
+        // Verificar se o usuário não é atendente
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Atendimento do Paciente para atendente ${user.nome}`);
             return res.redirect('/sistema/dashboard');
         }
         

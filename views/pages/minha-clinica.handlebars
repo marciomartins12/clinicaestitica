@@ -497,9 +497,9 @@
                     Profissionais
                 </div>
                 <div class="tab-btn" onclick="switchTab('recepcionistas')">
-                    <i class="fas fa-user-tie"></i>
-                    Recepcionistas
-                </div>
+                     <i class="fas fa-user-tie"></i>
+                     Atendentes
+                 </div>
             </div>
         </div>
 
@@ -616,15 +616,15 @@
         <div id="recepcionistas" class="tab-content">
             <div class="receptionists-container">
                 <div class="receptionists-header">
-                    <div>
-                        <h3><i class="fas fa-user-tie"></i> Recepcionistas</h3>
-                        <p>Gerencie os recepcionistas da sua clínica</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="showCreateReceptionistModal()">
-                        <i class="fas fa-plus"></i>
-                        Nova Recepcionista
-                    </button>
-                </div>
+                     <div>
+                         <h3><i class="fas fa-user-tie"></i> Atendentes</h3>
+                         <p>Gerencie os atendentes da sua clínica</p>
+                     </div>
+                     <button class="btn btn-primary" onclick="showCreateReceptionistModal()">
+                         <i class="fas fa-plus"></i>
+                         Novo Atendente
+                     </button>
+                 </div>
                 
                 <div id="receptionistsContainer">
                     <!-- Recepcionistas serão carregados via JavaScript -->
@@ -636,7 +636,7 @@
         <div class="empty-state" id="emptyState" style="display: none;">
             <i class="fas fa-users"></i>
             <h4>Nenhum usuário encontrado</h4>
-            <p>Adicione profissionais e recepcionistas à sua clínica</p>
+            <p>Adicione profissionais e atendentes à sua clínica</p>
         </div>
     </div>
 </div>
@@ -680,7 +680,7 @@
                 const data = await response.json();
                 if (data.success) {
                     professionals = data.data.filter(user => user.tipo_usuario === 'profissional');
-                    receptionists = data.data.filter(user => user.tipo_usuario === 'recepcionista');
+                    receptionists = data.data.filter(user => user.tipo_usuario === 'atendente');
                     
                     if (currentTab === 'profissionais') {
                         renderProfessionals();
@@ -782,7 +782,7 @@
                      </div>
                      <div class="user-info">
                          <h4>${receptionist.nome}</h4>
-                         <span class="user-type">Recepcionista</span>
+                         <span class="user-type">Atendente</span>
                      </div>
                      <div class="user-actions">
                          <button class="btn-icon" onclick="editUser(${receptionist.id})" title="Editar">
@@ -822,14 +822,14 @@
         showCreateUserModal('profissional');
     }
 
-    // Mostrar modal de criar recepcionista
-    function showCreateReceptionistModal() {
-        showCreateUserModal('recepcionista');
-    }
+    // Mostrar modal de criar atendente
+     function showCreateReceptionistModal() {
+         showCreateUserModal('atendente');
+     }
 
     // Mostrar modal de criar usuário
      function showCreateUserModal(type) {
-         const title = type === 'profissional' ? 'Novo Profissional' : 'Nova Recepcionista';
+         const title = type === 'profissional' ? 'Novo Profissional' : 'Novo Atendente';
          const icon = type === 'profissional' ? 'fa-user-md' : 'fa-user-tie';
          
          let formFields = '';
@@ -918,8 +918,8 @@
                  </div>
              `;
          } else {
-             // Formulário simplificado para recepcionistas
-             formFields = `
+              // Formulário simplificado para atendentes
+              formFields = `
                  <div class="form-row">
                      <div class="form-group">
                          <label class="form-label">Nome Completo *</label>
@@ -999,7 +999,7 @@
                                  Cancelar
                              </button>
                              <button type="submit" class="btn btn-primary">
-                                 <i class="fas fa-save"></i> Salvar ${type === 'profissional' ? 'Profissional' : 'Recepcionista'}
+                                 <i class="fas fa-save"></i> Salvar ${type === 'profissional' ? 'Profissional' : 'Atendente'}
                              </button>
                          </div>
                      </form>
@@ -1070,7 +1070,7 @@
             const result = await response.json();
             
             if (result.success) {
-                Notification.success(`${type === 'profissional' ? 'Profissional' : 'Recepcionista'} criado com sucesso!`);
+                Notification.success(`${type === 'profissional' ? 'Profissional' : 'Atendente'} criado com sucesso!`);
                 closeCreateUserModal();
                 loadUsers(); // Recarregar usuários
             } else {
