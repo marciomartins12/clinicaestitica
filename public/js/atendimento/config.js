@@ -81,6 +81,29 @@ const Utils = {
                 },
                 ...options
             });
+            
+            // Verificar se a resposta é válida
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    // Redirecionar para login se não autenticado
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            // Verificar se o conteúdo é JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                if (text.includes('<!DOCTYPE')) {
+                    // Página HTML retornada, provavelmente erro de autenticação
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error('Resposta não é JSON válido');
+            }
+            
             return await response.json();
         } catch (error) {
             console.error('Erro na requisição:', error);

@@ -114,6 +114,7 @@ router.put('/atendimento/exame/resultado', authController.isLoggedIn, Atendiment
 router.delete('/atendimento/exame/:exameId', authController.isLoggedIn, AtendimentoController.apagarExame);
 router.post('/atendimento/foto', authController.isLoggedIn, AtendimentoController.salvarFoto);
 router.get('/atendimento/fotos/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarFotos);
+router.delete('/atendimento/foto/:fotoId', authController.isLoggedIn, AtendimentoController.excluirFoto);
 router.post('/atendimento/prescricao', authController.isLoggedIn, AtendimentoController.salvarPrescricao);
 router.get('/atendimento/prescricoes/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarPrescricoes);
 router.get('/atendimento/historico/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarHistorico);

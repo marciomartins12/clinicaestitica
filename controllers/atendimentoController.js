@@ -1,4 +1,4 @@
-const { Anamnese, Atestado, Exame, FotoPaciente, Prescricao, Paciente, Clinica, ItemExame } = require('../models');
+const { Anamnese, Atestado, Exame, FotoPaciente, Prescricao, Paciente, Clinica, ItemExame, Agendamento, Produto } = require('../models');
 const { Op } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
@@ -298,6 +298,19 @@ class AtendimentoController {
             
             const fotos = await FotoPaciente.findAll({
                 where: { paciente_id: pacienteId },
+                include: [
+                    {
+                        model: Agendamento,
+                        as: 'procedimento',
+                        include: [
+                            {
+                                model: Produto,
+                                as: 'produto'
+                            }
+                        ],
+                        required: false
+                    }
+                ],
                 order: [['data_foto', 'DESC']]
             });
             
@@ -317,6 +330,20 @@ class AtendimentoController {
                     atualizado_em: foto.atualizado_em
                 };
                 
+                // Incluir informações do procedimento se existir
+                if (foto.procedimento) {
+                    fotoData.procedimento = {
+                        id: foto.procedimento.id,
+                        data_agendamento: foto.procedimento.data_agendamento,
+                        status: foto.procedimento.status,
+                        produto: foto.procedimento.produto ? {
+                            id: foto.procedimento.produto.id,
+                            nome: foto.procedimento.produto.nome,
+                            tipo: foto.procedimento.produto.tipo
+                        } : null
+                    };
+                }
+                
                 // Converter BLOB para base64
                 if (foto.foto) {
                     const base64 = foto.foto.toString('base64');
@@ -330,6 +357,35 @@ class AtendimentoController {
         } catch (error) {
             console.error('Erro ao buscar fotos:', error);
             res.status(500).json({ success: false, message: 'Erro ao buscar fotos' });
+        }
+    }
+    
+    // Excluir foto
+    static async excluirFoto(req, res) {
+        try {
+            const { fotoId } = req.params;
+            
+            console.log('Excluindo foto:', fotoId);
+            
+            // Buscar a foto para verificar se existe
+            const foto = await FotoPaciente.findByPk(fotoId);
+            
+            if (!foto) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Foto não encontrada' 
+                });
+            }
+            
+            // Excluir a foto
+            await foto.destroy();
+            
+            console.log('Foto excluída com sucesso:', fotoId);
+            
+            res.json({ success: true, message: 'Foto excluída com sucesso' });
+        } catch (error) {
+            console.error('Erro ao excluir foto:', error);
+            res.status(500).json({ success: false, message: 'Erro ao excluir foto' });
         }
     }
     

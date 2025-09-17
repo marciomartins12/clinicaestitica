@@ -26,7 +26,7 @@ const TabManager = {
         }
 
         // Adicionar classe active ao botão clicado
-        if (evt && evt.currentTarget) {
+        if (evt && evt.currentTarget && evt.currentTarget.classList) {
             evt.currentTarget.classList.add('active');
         }
 
@@ -49,6 +49,12 @@ const TabManager = {
                 break;
             case 'fotos':
                 FotoManager.load();
+                // Garantir que os procedimentos sejam carregados
+                setTimeout(() => {
+                    if (FotoManager.loadProcedimentos) {
+                        FotoManager.loadProcedimentos();
+                    }
+                }, 100);
                 break;
             case 'evolucao':
                 EvolucaoManager.load();

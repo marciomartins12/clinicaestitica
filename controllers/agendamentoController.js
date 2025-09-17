@@ -5,7 +5,7 @@ class AgendamentoController {
     // Buscar agendamentos com filtros
     static async buscarAgendamentos(req, res) {
         try {
-            const { mes, ano, busca, page = 1, limit = 10, paciente_id, status } = req.query;
+            const { mes, ano, busca, page = 1, limit = 100, paciente_id, status, expandir_produtos } = req.query;
             
             let whereClause = {};
             
@@ -92,20 +92,72 @@ class AgendamentoController {
             
             const totalPages = Math.ceil(count / limit);
             
-            // Adicionar campo virtual horario
-            const agendamentosComHorario = agendamentos.map(agendamento => {
-                const agendamentoData = agendamento.toJSON();
-                if (agendamentoData.data_agendamento) {
-                    const data = new Date(agendamentoData.data_agendamento);
-                    agendamentoData.horario = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    agendamentoData.valor_total = agendamentoData.valor_final || agendamentoData.valor || 0;
-                }
-                return agendamentoData;
-            });
+            // Processar agendamentos com campos virtuais
+            let agendamentosProcessados;
+            
+            if (expandir_produtos === 'true') {
+                // Expandir agendamentos para incluir todos os produtos dos itens (para sistema de fotos)
+                agendamentosProcessados = [];
+                
+                agendamentos.forEach(agendamento => {
+                    const agendamentoData = agendamento.toJSON();
+                    
+                    // Adicionar campos virtuais
+                    if (agendamentoData.data_agendamento) {
+                        const data = new Date(agendamentoData.data_agendamento);
+                        agendamentoData.horario = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        agendamentoData.valor_total = agendamentoData.valor_final || agendamentoData.valor || 0;
+                    }
+                    
+                    // Se tem produto direto, adicionar como está
+                    if (agendamentoData.produto) {
+                        agendamentosProcessados.push(agendamentoData);
+                    }
+                    // Se não tem produto direto mas tem itens, criar uma entrada para cada produto
+                    else if (agendamentoData.itens && agendamentoData.itens.length > 0) {
+                        agendamentoData.itens.forEach((item, index) => {
+                            if (item.produto) {
+                                const agendamentoComProduto = { ...agendamentoData };
+                                agendamentoComProduto.produto = item.produto;
+                                // Criar ID único para cada produto do mesmo agendamento
+                                agendamentoComProduto.id = `${agendamentoData.id}_${index}`;
+                                agendamentoComProduto.agendamento_original_id = agendamentoData.id;
+                                agendamentosProcessados.push(agendamentoComProduto);
+                            }
+                        });
+                    }
+                    // Se não tem produto nem itens, adicionar mesmo assim
+                    else {
+                        agendamentosProcessados.push(agendamentoData);
+                    }
+                });
+            } else {
+                // Processamento normal (para página de agendamentos)
+                agendamentosProcessados = agendamentos.map(agendamento => {
+                    const agendamentoData = agendamento.toJSON();
+                    
+                    // Adicionar campos virtuais
+                    if (agendamentoData.data_agendamento) {
+                        const data = new Date(agendamentoData.data_agendamento);
+                        agendamentoData.horario = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        agendamentoData.valor_total = agendamentoData.valor_final || agendamentoData.valor || 0;
+                    }
+                    
+                    // Se não tem produto direto, usar o primeiro produto dos itens
+                    if (!agendamentoData.produto && agendamentoData.itens && agendamentoData.itens.length > 0) {
+                        const primeiroItem = agendamentoData.itens[0];
+                        if (primeiroItem.produto) {
+                            agendamentoData.produto = primeiroItem.produto;
+                        }
+                    }
+                    
+                    return agendamentoData;
+                });
+            }
             
             res.json({
                 success: true,
-                data: agendamentosComHorario,
+                data: agendamentosProcessados,
                 pagination: {
                     currentPage: parseInt(page),
                     totalPages,
