@@ -69,6 +69,14 @@ const Pagamento = sequelize.define('Pagamento', {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: 1
+    },
+    confirmado_por: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'usuarios',
+            key: 'id'
+        }
     }
 }, {
     tableName: 'pagamentos',

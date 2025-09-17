@@ -39,10 +39,17 @@ if (isProduction) {
     
     // Rate limiting específico para login
     const loginLimiter = rateLimit({
-        windowMs: 5 * 60 * 1000, // 5 minutos
-        max: 20, // máximo 20 tentativas de login por IP
-        message: 'Muitas tentativas de login. Tente novamente em 5 minutos.',
-        skipSuccessfulRequests: true
+        windowMs: 15 * 60 * 1000, // 15 minutos
+        max: 50, // máximo 50 tentativas de login por IP
+        message: 'Muitas tentativas de login. Tente novamente em 15 minutos.',
+        skipSuccessfulRequests: true,
+        standardHeaders: true,
+        legacyHeaders: false,
+        handler: (req, res) => {
+            console.log(`Rate limit exceeded for IP: ${req.ip}`);
+            req.flash('LoginError', 'Muitas tentativas de login. Tente novamente em 15 minutos.');
+            res.redirect('/');
+        }
     });
     app.use('/tryLogin', loginLimiter);
 }
@@ -122,6 +129,12 @@ const router = express.Router();
 const rotasSistema = require('./routes/sistema');
 const controllerAuth = require('./controllers/authController');
 //usando rotas
+// Middleware de log para tryLogin
+router.use('/tryLogin', (req, res, next) => {
+    console.log(`Requisição tryLogin - IP: ${req.ip}, Method: ${req.method}, Body:`, req.body);
+    next();
+});
+
 router.get("/", controllerAuth.pageLogin);
 router.post('/tryLogin', controllerAuth.tryLogin);
 router.get('/logout', controllerAuth.logout);

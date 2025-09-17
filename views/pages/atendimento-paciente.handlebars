@@ -438,12 +438,6 @@
                 <div id="evolucao" class="tab-content">
                     <div class="content-header">
                         <h3><i class="fas fa-chart-line"></i> Evolução do Paciente</h3>
-                        <div class="content-actions">
-                            <button class="btn btn-primary" onclick="abrirModalNovoAgendamento()">
-                                <i class="fas fa-plus"></i>
-                                Novo Agendamento
-                            </button>
-                        </div>
                     </div>
                     
                     <div class="evolucao-filters">
@@ -452,8 +446,7 @@
                             <select id="statusFiltro" class="form-select" onchange="filtrarEvolucao()">
                                 <option value="todos">Todos os status</option>
                                 <option value="agendado">Agendados</option>
-                                <option value="realizado">Realizados</option>
-                                <option value="cancelado">Cancelados</option>
+                                <option value="concluido">Realizados</option>
                             </select>
                         </div>
                     </div>
@@ -462,97 +455,6 @@
                         <!-- Tabela de evolução será carregada aqui -->
                     </div>
                     
-                    <!-- Modal Novo Agendamento -->
-                    <div id="novoAgendamentoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-                        <div style="background: white; border-radius: 8px; width: 90%; max-width: 700px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
-                            <div style="flex: 1; overflow-y: auto; padding: 0;">
-                                <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">Novo Agendamento</h3>
-                                    <button onclick="fecharModalNovoAgendamento()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
-                                </div>
-
-                                <form id="novoAgendamentoForm" onsubmit="salvarNovoAgendamento(event)">
-                                    <div style="padding: 20px;">
-                                        <!-- Paciente (já selecionado) -->
-                                        <div style="margin-bottom: 15px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; color: #1e40af;">
-                                            <div><strong>Paciente:</strong> <span id="pacienteNomeAgendamento"></span></div>
-                                            <input type="hidden" id="pacienteIdAgendamento">
-                                        </div>
-
-                                        <!-- Profissional -->
-                                        <div style="margin-bottom: 15px;">
-                                            <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Profissional *</label>
-                                            <select id="profissionalSelectEvolucao" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                                <option value="">Selecione um profissional</option>
-                                            </select>
-                                        </div>
-
-                                        <!-- Tipo de Agendamento -->
-                                        <div style="margin-bottom: 15px;">
-                                            <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Tipo de Agendamento</label>
-                                            <select id="tipoAgendamentoEvolucao" onchange="alterarTipoAgendamentoEvolucao()" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                                <option value="analise">Apenas Análise/Consulta</option>
-                                                <option value="procedimentos">Com Procedimentos/Produtos</option>
-                                            </select>
-                                        </div>
-
-                                        <!-- Seção de Itens (Procedimentos e Produtos) -->
-                                        <div id="secaoItensEvolucao" style="display: none; margin-bottom: 15px;">
-                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                                <label style="font-weight: 500; color: #374151; font-size: 14px;">Procedimentos e Produtos</label>
-                                                <button type="button" onclick="adicionarItemEvolucao()" style="padding: 5px 10px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                                    <i class="fas fa-plus"></i> Adicionar
-                                                </button>
-                                            </div>
-                                            <div id="listaItensEvolucao" style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; background: #f9fafb;">
-                                                <!-- Itens serão adicionados aqui dinamicamente -->
-                                            </div>
-                                        </div>
-
-                                        <!-- Data e Horário -->
-                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                                            <div>
-                                                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Data *</label>
-                                                <input type="date" id="dataAgendamentoEvolucao" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                            </div>
-                                            <div>
-                                                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Horário *</label>
-                                                <input type="time" id="horarioAgendamentoEvolucao" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                            </div>
-                                        </div>
-
-                                        <!-- Valor Total (calculado automaticamente) -->
-                                        <div id="resumoValoresEvolucao" style="display: none; margin-bottom: 15px; padding: 12px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px;">
-                                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                                <span style="font-weight: 500; color: #374151;">Subtotal:</span>
-                                                <span id="subtotalAgendamentoEvolucao" style="color: #374151;">R$ 0,00</span>
-                                            </div>
-                                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                                <span style="font-weight: 500; color: #374151;">Desconto Total:</span>
-                                                <span id="descontoTotalAgendamentoEvolucao" style="color: #ef4444;">R$ 0,00</span>
-                                            </div>
-                                            <div style="display: flex; justify-content: space-between; border-top: 1px solid #bae6fd; padding-top: 5px;">
-                                                <span style="font-weight: 600; color: #1e293b;">Total:</span>
-                                                <span id="totalAgendamentoEvolucao" style="font-weight: 600; color: #1e293b;">R$ 0,00</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Observações -->
-                                        <div style="margin-bottom: 15px;">
-                                            <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Observações</label>
-                                            <textarea id="observacoesAgendamentoEvolucao" rows="3" placeholder="Observações sobre o agendamento..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                            <div style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; justify-content: flex-end; background: white;">
-                                <button type="button" onclick="fecharModalNovoAgendamento()" style="padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
-                                <button type="button" onclick="salvarNovoAgendamento()" style="padding: 10px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                                    <i class="fas fa-save"></i> Salvar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Prescrição Tab -->
@@ -676,6 +578,8 @@ if (typeof currentPatientId === 'undefined') {
 }
 let currentStream = null;
 let medicamentosDisponiveis = [];
+let currentUserId = {{user.id}}; // ID do usuário logado para controle de permissões
+// Variáveis do novo agendamento removidas
 
 // Tab functionality
 function openTab(evt, tabName) {
@@ -1503,6 +1407,8 @@ function exibirEvolucao(agendamentos) {
     const container = document.getElementById('evolucaoList');
     container.innerHTML = '';
     
+    console.log('Agendamentos recebidos:', agendamentos);
+    
     if (agendamentos.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>Nenhum procedimento encontrado.</p></div>';
         return;
@@ -1528,7 +1434,7 @@ function exibirEvolucao(agendamentos) {
                 const statusClass = getStatusClass(agendamento.status);
                 const statusText = getStatusText(agendamento.status);
                 const isPago = agendamento.pagamentos && agendamento.pagamentos.some(p => p.status === 'pago');
-                 const valorFormatado = parseFloat(agendamento.valor_total || agendamento.valor_final || agendamento.valor || 0).toFixed(2);
+                 const valorFormatado = calcularValorTotalAgendamento(agendamento).toFixed(2);
                  const dataAgendamento = new Date(agendamento.data_agendamento);
                  
                  return `
@@ -1541,7 +1447,7 @@ function exibirEvolucao(agendamentos) {
                          </td>
                         <td>
                             <div class="procedimento-info">
-                                <div class="nome">${agendamento.produto?.nome || 'Procedimento'}</div>
+                                ${getProcedimentosText(agendamento)}
                                 ${agendamento.observacoes ? `<div class="observacoes">${agendamento.observacoes}</div>` : ''}
                             </div>
                         </td>
@@ -1558,16 +1464,7 @@ function exibirEvolucao(agendamentos) {
                             <button class="btn-small btn-primary" onclick="verAtendimento(${agendamento.id})" title="Ver Atendimento">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            ${(agendamento.status === 'agendado' || agendamento.status === 'confirmado' || agendamento.status === 'em_andamento') ? 
-                                `<button class="btn-small btn-warning" onclick="concluirAtendimento(${agendamento.id})" title="Concluir Atendimento">
-                                    <i class="fas fa-check-circle"></i>
-                                </button>` : ''
-                            }
-                            ${agendamento.status === 'concluido' && !isPago ? 
-                                `<button class="btn-small btn-success" onclick="confirmarPagamento(${agendamento.id})" title="Confirmar Pagamento">
-                                    <i class="fas fa-dollar-sign"></i>
-                                </button>` : ''
-                            }
+                            ${getProfissionalActions(agendamento, isPago)}
                         </td>
                     </tr>
                 `;
@@ -1604,6 +1501,152 @@ function getStatusText(status) {
     return texts[status] || status;
 }
 
+function getProcedimentosText(agendamento) {
+    console.log('getProcedimentosText chamada para agendamento:', agendamento);
+    let procedimentos = [];
+    
+    // Se tem produto direto, adicionar
+    if (agendamento.produto && agendamento.produto.nome) {
+        console.log('Produto direto encontrado:', agendamento.produto.nome);
+        procedimentos.push(agendamento.produto.nome);
+    }
+    
+    // Se tem itens, adicionar todos os produtos dos itens
+    if (agendamento.itens && agendamento.itens.length > 0) {
+        console.log('Itens encontrados:', agendamento.itens.length, agendamento.itens);
+        agendamento.itens.forEach(item => {
+            console.log('Processando item:', item);
+            if (item.produto && item.produto.nome) {
+                console.log('Produto do item encontrado:', item.produto.nome);
+                // Evitar duplicação se o produto já foi adicionado
+                if (!procedimentos.includes(item.produto.nome)) {
+                    procedimentos.push(item.produto.nome);
+                }
+            }
+        });
+    } else {
+        console.log('Nenhum item encontrado para agendamento:', agendamento.id);
+    }
+    
+    // Se não encontrou nenhum procedimento, usar texto padrão
+    if (procedimentos.length === 0) {
+        return '<div class="nome">Procedimento</div>';
+    }
+    
+    // Se tem apenas um procedimento
+    if (procedimentos.length === 1) {
+        return `<div class="nome">${procedimentos[0]}</div>`;
+    }
+    
+    // Se tem múltiplos procedimentos
+    const listaId = `procedimentos_${agendamento.id}_${Date.now()}`;
+    return `
+        <div class="nome">${procedimentos[0]}</div>
+        <div class="procedimentos-extras" onclick="toggleProcedimentos('${listaId}')">
+            + ${procedimentos.length - 1} procedimento(s)
+        </div>
+        <div id="${listaId}" class="procedimentos-lista" style="display: none;">
+            ${procedimentos.map(proc => `<div class="procedimento-item">• ${proc}</div>`).join('')}
+        </div>
+    `;
+}
+
+function getProfissionalActions(agendamento, isPago) {
+    // Verifica se o usuário logado é o profissional responsável pelo agendamento
+    const profissionalId = agendamento.profissional?.id || agendamento.Usuario?.id || agendamento.usuario_id;
+    const isProfissionalResponsavel = currentUserId == profissionalId;
+    
+    let actions = '';
+    
+    // Apenas o profissional responsável pode confirmar status e pagamento
+    if (isProfissionalResponsavel) {
+        // Botão para concluir atendimento
+        if (agendamento.status === 'agendado' || agendamento.status === 'confirmado' || agendamento.status === 'em_andamento') {
+            actions += `
+                <button class="btn-small btn-warning" onclick="concluirAtendimento(${agendamento.id})" title="Concluir Atendimento">
+                    <i class="fas fa-check-circle"></i>
+                </button>
+            `;
+        }
+        
+        // Botão para confirmar pagamento
+        if (agendamento.status === 'concluido' && !isPago) {
+            actions += `
+                <button class="btn-small btn-success" onclick="confirmarPagamento(${agendamento.id})" title="Confirmar Pagamento">
+                    <i class="fas fa-dollar-sign"></i>
+                </button>
+            `;
+        }
+    } else {
+        // Para outros profissionais, mostrar apenas indicação de que não podem alterar
+        if ((agendamento.status === 'agendado' || agendamento.status === 'confirmado' || agendamento.status === 'em_andamento') || 
+            (agendamento.status === 'concluido' && !isPago)) {
+            actions += `
+                <span class="text-muted" title="Apenas o profissional responsável pode alterar o status">
+                    <i class="fas fa-lock"></i> Restrito
+                </span>
+            `;
+        }
+    }
+    
+    return actions;
+}
+
+function calcularValorTotalAgendamento(agendamento) {
+    console.log('Calculando valor para agendamento:', agendamento.id);
+    
+    // Se tem valor direto, usar ele
+    if (agendamento.valor_total && agendamento.valor_total > 0) {
+        console.log('Usando valor_total direto:', agendamento.valor_total);
+        return parseFloat(agendamento.valor_total);
+    }
+    
+    if (agendamento.valor_final && agendamento.valor_final > 0) {
+        console.log('Usando valor_final direto:', agendamento.valor_final);
+        return parseFloat(agendamento.valor_final);
+    }
+    
+    if (agendamento.valor && agendamento.valor > 0) {
+        console.log('Usando valor direto:', agendamento.valor);
+        return parseFloat(agendamento.valor);
+    }
+    
+    // Se não tem valor direto, calcular baseado nos itens
+    if (agendamento.itens && agendamento.itens.length > 0) {
+        console.log('Calculando valor baseado em itens:', agendamento.itens.length);
+        let total = 0;
+        
+        agendamento.itens.forEach(item => {
+            const valorItem = parseFloat(item.valor_total || 0);
+            console.log(`Item ${item.id}: valor_total = ${valorItem}`);
+            total += valorItem;
+        });
+        
+        console.log('Valor total calculado dos itens:', total);
+        return total;
+    }
+    
+    // Se tem produto direto, usar o preço dele
+    if (agendamento.produto && agendamento.produto.preco) {
+        console.log('Usando preço do produto direto:', agendamento.produto.preco);
+        return parseFloat(agendamento.produto.preco);
+    }
+    
+    console.log('Nenhum valor encontrado, retornando 0');
+    return 0;
+}
+
+function toggleProcedimentos(listaId) {
+    const lista = document.getElementById(listaId);
+    if (lista) {
+        if (lista.style.display === 'none') {
+            lista.style.display = 'block';
+        } else {
+            lista.style.display = 'none';
+        }
+    }
+}
+
 function getActionsForStatus(agendamento) {
     let actions = '';
     
@@ -1625,7 +1668,9 @@ function getActionsForStatus(agendamento) {
 function getPagamentosInfo(pagamentos) {
     const pago = pagamentos.find(p => p.status === 'pago');
     if (pago) {
-        return `<p class="pagamento-info"><i class="fas fa-check-circle text-success"></i> Pago em ${new Date(pago.data_pagamento).toLocaleDateString('pt-BR')}</p>`;
+        const dataPagamento = new Date(pago.data_pagamento).toLocaleDateString('pt-BR');
+        const confirmadoPor = pago.confirmador ? ` por ${pago.confirmador.nome}` : '';
+        return `<p class="pagamento-info"><i class="fas fa-check-circle text-success"></i> Pago em ${dataPagamento}${confirmadoPor}</p>`;
     }
     return '<p class="pagamento-info"><i class="fas fa-clock text-warning"></i> Pagamento pendente</p>';
 }
@@ -1785,197 +1830,7 @@ function mostrarModalDetalhes(agendamento) {
     };
 }
 
-let itensAgendamentoEvolucao = [];
-
-function abrirModalNovoAgendamento() {
-    // Preencher informações do paciente
-    const nomeElement = document.querySelector('.patient-name');
-    const pacienteNome = nomeElement ? nomeElement.textContent : 'Paciente Atual';
-    document.getElementById('pacienteNomeAgendamento').textContent = pacienteNome;
-    document.getElementById('pacienteIdAgendamento').value = currentPatientId;
-    
-    // Carregar profissionais e produtos
-    carregarProfissionaisEvolucao();
-    carregarProdutosEvolucao();
-    
-    // Limpar itens
-    itensAgendamentoEvolucao = [];
-    atualizarListaItensEvolucao();
-    
-    document.getElementById('novoAgendamentoModal').style.display = 'flex';
-}
-
-function fecharModalNovoAgendamento() {
-    document.getElementById('novoAgendamentoModal').style.display = 'none';
-    document.getElementById('novoAgendamentoForm').reset();
-    itensAgendamentoEvolucao = [];
-    document.getElementById('secaoItensEvolucao').style.display = 'none';
-    document.getElementById('resumoValoresEvolucao').style.display = 'none';
-}
-
-function carregarProfissionaisEvolucao() {
-    fetch('/sistema/profissionais')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const select = document.getElementById('profissionalSelectEvolucao');
-                select.innerHTML = '<option value="">Selecione um profissional</option>';
-                data.data.forEach(profissional => {
-                    const option = document.createElement('option');
-                    option.value = profissional.id;
-                    option.textContent = profissional.nome;
-                    select.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Erro ao carregar profissionais:', error));
-}
-
-function carregarProdutosEvolucao() {
-    fetch('/sistema/produtos')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.produtosEvolucao = data.data;
-            }
-        })
-        .catch(error => console.error('Erro ao carregar produtos:', error));
-}
-
-function alterarTipoAgendamentoEvolucao() {
-    const tipo = document.getElementById('tipoAgendamentoEvolucao').value;
-    const secaoItens = document.getElementById('secaoItensEvolucao');
-    const resumoValores = document.getElementById('resumoValoresEvolucao');
-    
-    if (tipo === 'procedimentos') {
-        secaoItens.style.display = 'block';
-        resumoValores.style.display = 'block';
-    } else {
-        secaoItens.style.display = 'none';
-        resumoValores.style.display = 'none';
-        itensAgendamentoEvolucao = [];
-        atualizarListaItensEvolucao();
-    }
-}
-
-function adicionarItemEvolucao() {
-    if (!window.produtosEvolucao || window.produtosEvolucao.length === 0) {
-        alert('Carregando produtos...');
-        return;
-    }
-    
-    const produto = prompt('Digite o nome do produto/procedimento:');
-    if (!produto) return;
-    
-    const produtoEncontrado = window.produtosEvolucao.find(p => 
-        p.nome.toLowerCase().includes(produto.toLowerCase())
-    );
-    
-    if (produtoEncontrado) {
-        const item = {
-            id: Date.now(),
-            produto_id: produtoEncontrado.id,
-            nome: produtoEncontrado.nome,
-            quantidade: 1,
-            valor_unitario: parseFloat(produtoEncontrado.preco),
-            desconto: 0,
-            valor_total: parseFloat(produtoEncontrado.preco)
-        };
-        
-        itensAgendamentoEvolucao.push(item);
-        atualizarListaItensEvolucao();
-        calcularTotalEvolucao();
-    } else {
-        alert('Produto não encontrado.');
-    }
-}
-
-function atualizarListaItensEvolucao() {
-    const lista = document.getElementById('listaItensEvolucao');
-    
-    if (itensAgendamentoEvolucao.length === 0) {
-        lista.innerHTML = '<p style="text-align: center; color: #6b7280; margin: 10px 0;">Nenhum item adicionado</p>';
-        return;
-    }
-    
-    lista.innerHTML = itensAgendamentoEvolucao.map(item => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #e5e7eb; background: white; border-radius: 4px; margin-bottom: 5px;">
-            <div style="flex: 1;">
-                <strong>${item.nome}</strong><br>
-                <small>Qtd: ${item.quantidade} | Valor: R$ ${item.valor_unitario.toFixed(2)}</small>
-            </div>
-            <div style="text-align: right;">
-                <strong>R$ ${item.valor_total.toFixed(2)}</strong><br>
-                <button type="button" onclick="removerItemEvolucao(${item.id})" style="background: #ef4444; color: white; border: none; border-radius: 3px; padding: 2px 6px; font-size: 11px; cursor: pointer;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function removerItemEvolucao(itemId) {
-    itensAgendamentoEvolucao = itensAgendamentoEvolucao.filter(item => item.id !== itemId);
-    atualizarListaItensEvolucao();
-    calcularTotalEvolucao();
-}
-
-function calcularTotalEvolucao() {
-    const subtotal = itensAgendamentoEvolucao.reduce((sum, item) => sum + item.valor_total, 0);
-    const descontoTotal = itensAgendamentoEvolucao.reduce((sum, item) => sum + item.desconto, 0);
-    const total = subtotal - descontoTotal;
-    
-    document.getElementById('subtotalAgendamentoEvolucao').textContent = `R$ ${subtotal.toFixed(2)}`;
-    document.getElementById('descontoTotalAgendamentoEvolucao').textContent = `R$ ${descontoTotal.toFixed(2)}`;
-    document.getElementById('totalAgendamentoEvolucao').textContent = `R$ ${total.toFixed(2)}`;
-}
-
-function salvarNovoAgendamento(event) {
-    if (event) event.preventDefault();
-    
-    const agendamento = {
-        paciente_id: currentPatientId,
-        profissional_id: document.getElementById('profissionalSelectEvolucao').value,
-        data_agendamento: document.getElementById('dataAgendamentoEvolucao').value,
-        horario: document.getElementById('horarioAgendamentoEvolucao').value,
-        observacoes: document.getElementById('observacoesAgendamentoEvolucao').value,
-        tipo_agendamento: document.getElementById('tipoAgendamentoEvolucao').value,
-        itens: itensAgendamentoEvolucao,
-        status: 'agendado'
-    };
-    
-    if (!agendamento.profissional_id || !agendamento.data_agendamento || !agendamento.horario) {
-        alert('Por favor, preencha todos os campos obrigatórios.');
-        return;
-    }
-    
-    if (agendamento.tipo_agendamento === 'procedimentos' && itensAgendamentoEvolucao.length === 0) {
-        alert('Adicione pelo menos um procedimento/produto.');
-        return;
-    }
-    
-    fetch('/sistema/agendamento', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(agendamento)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Agendamento criado com sucesso!');
-            fecharModalNovoAgendamento();
-            carregarEvolucao();
-        } else {
-            alert('Erro ao criar agendamento: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        alert('Erro ao criar agendamento');
-    });
-}
+// Funcionalidades do novo agendamento removidas
 
 function finalizarAtendimento() {
     if (confirm('Deseja finalizar o atendimento? Esta ação não pode ser desfeita.')) {

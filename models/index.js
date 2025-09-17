@@ -66,6 +66,7 @@ Prescricao.hasMany(ItemPrescricao, { foreignKey: 'prescricao_id', as: 'itens' })
 // Associações do Pagamento
 Pagamento.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
 Pagamento.belongsTo(Agendamento, { foreignKey: 'agendamento_id', as: 'agendamento' });
+Pagamento.belongsTo(Usuario, { foreignKey: 'confirmado_por', as: 'confirmador' });
 
 // Associações da Anamnese
 Anamnese.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });

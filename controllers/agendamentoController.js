@@ -74,7 +74,13 @@ class AgendamentoController {
                 {
                     model: Pagamento,
                     as: 'pagamentos',
-                    attributes: ['id', 'status', 'valor_final', 'data_pagamento'],
+                    attributes: ['id', 'status', 'valor_final', 'data_pagamento', 'confirmado_por'],
+                    include: [{
+                        model: Usuario,
+                        as: 'confirmador',
+                        attributes: ['id', 'nome'],
+                        required: false
+                    }],
                     required: false
                 }
             ];
@@ -610,6 +616,7 @@ class AgendamentoController {
         try {
             const { id } = req.params;
             const { valor_pago, metodo_pagamento = 'dinheiro' } = req.body;
+            const usuarioId = req.session.user.id; // Capturar usuário que confirmou
             
             const agendamento = await Agendamento.findByPk(id, {
                 include: [{
@@ -637,7 +644,8 @@ class AgendamentoController {
                 valor_final: valorFinal,
                 forma_pagamento: metodo_pagamento,
                 status: 'pago',
-                data_pagamento: new Date()
+                data_pagamento: new Date(),
+                confirmado_por: usuarioId
             });
             
             res.json({
