@@ -83,9 +83,9 @@
                     <i class="fas fa-camera"></i>
                     Fotos
                 </button>
-                <button class="tab-btn" onclick="openTab(event, 'historico')">
-                    <i class="fas fa-history"></i>
-                    Histórico
+                <button class="tab-btn" onclick="openTab(event, 'evolucao')">
+                    <i class="fas fa-chart-line"></i>
+                    Evolução
                 </button>
                 <button class="tab-btn" onclick="openTab(event, 'atestado')">
                     <i class="fas fa-file-medical"></i>
@@ -435,32 +435,123 @@
                 </div>
 
                 <!-- Histórico Tab -->
-                <div id="historico" class="tab-content">
+                <div id="evolucao" class="tab-content">
                     <div class="content-header">
-                        <h3><i class="fas fa-history"></i> Histórico de Atendimentos</h3>
+                        <h3><i class="fas fa-chart-line"></i> Evolução do Paciente</h3>
                         <div class="content-actions">
-                            <button class="btn btn-success" onclick="gerarComprovante()">
-                                <i class="fas fa-file-pdf"></i>
-                                Gerar Comprovante
+                            <button class="btn btn-primary" onclick="abrirModalNovoAgendamento()">
+                                <i class="fas fa-plus"></i>
+                                Novo Agendamento
                             </button>
                         </div>
                     </div>
                     
-                    <div class="historico-filters">
+                    <div class="evolucao-filters">
                         <div class="filter-group">
-                            <label>Período</label>
-                            <input type="date" id="dataInicio" class="form-input">
-                            <span>até</span>
-                            <input type="date" id="dataFim" class="form-input">
-                            <button class="btn btn-secondary" onclick="filtrarHistorico()">
-                                <i class="fas fa-filter"></i>
-                                Filtrar
-                            </button>
+                            <label>Status</label>
+                            <select id="statusFiltro" class="form-select" onchange="filtrarEvolucao()">
+                                <option value="todos">Todos os status</option>
+                                <option value="agendado">Agendados</option>
+                                <option value="realizado">Realizados</option>
+                                <option value="cancelado">Cancelados</option>
+                            </select>
                         </div>
                     </div>
                     
-                    <div class="historico-list" id="historicoList">
-                        <!-- Histórico será carregado aqui -->
+                    <div class="evolucao-table-container" id="evolucaoList">
+                        <!-- Tabela de evolução será carregada aqui -->
+                    </div>
+                    
+                    <!-- Modal Novo Agendamento -->
+                    <div id="novoAgendamentoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+                        <div style="background: white; border-radius: 8px; width: 90%; max-width: 700px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+                            <div style="flex: 1; overflow-y: auto; padding: 0;">
+                                <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">Novo Agendamento</h3>
+                                    <button onclick="fecharModalNovoAgendamento()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                                </div>
+
+                                <form id="novoAgendamentoForm" onsubmit="salvarNovoAgendamento(event)">
+                                    <div style="padding: 20px;">
+                                        <!-- Paciente (já selecionado) -->
+                                        <div style="margin-bottom: 15px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; color: #1e40af;">
+                                            <div><strong>Paciente:</strong> <span id="pacienteNomeAgendamento"></span></div>
+                                            <input type="hidden" id="pacienteIdAgendamento">
+                                        </div>
+
+                                        <!-- Profissional -->
+                                        <div style="margin-bottom: 15px;">
+                                            <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Profissional *</label>
+                                            <select id="profissionalSelectEvolucao" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                                <option value="">Selecione um profissional</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Tipo de Agendamento -->
+                                        <div style="margin-bottom: 15px;">
+                                            <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Tipo de Agendamento</label>
+                                            <select id="tipoAgendamentoEvolucao" onchange="alterarTipoAgendamentoEvolucao()" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                                <option value="analise">Apenas Análise/Consulta</option>
+                                                <option value="procedimentos">Com Procedimentos/Produtos</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Seção de Itens (Procedimentos e Produtos) -->
+                                        <div id="secaoItensEvolucao" style="display: none; margin-bottom: 15px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                                <label style="font-weight: 500; color: #374151; font-size: 14px;">Procedimentos e Produtos</label>
+                                                <button type="button" onclick="adicionarItemEvolucao()" style="padding: 5px 10px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                                    <i class="fas fa-plus"></i> Adicionar
+                                                </button>
+                                            </div>
+                                            <div id="listaItensEvolucao" style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; background: #f9fafb;">
+                                                <!-- Itens serão adicionados aqui dinamicamente -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Data e Horário -->
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                            <div>
+                                                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Data *</label>
+                                                <input type="date" id="dataAgendamentoEvolucao" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                            </div>
+                                            <div>
+                                                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Horário *</label>
+                                                <input type="time" id="horarioAgendamentoEvolucao" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                            </div>
+                                        </div>
+
+                                        <!-- Valor Total (calculado automaticamente) -->
+                                        <div id="resumoValoresEvolucao" style="display: none; margin-bottom: 15px; padding: 12px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px;">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                <span style="font-weight: 500; color: #374151;">Subtotal:</span>
+                                                <span id="subtotalAgendamentoEvolucao" style="color: #374151;">R$ 0,00</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                <span style="font-weight: 500; color: #374151;">Desconto Total:</span>
+                                                <span id="descontoTotalAgendamentoEvolucao" style="color: #ef4444;">R$ 0,00</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; border-top: 1px solid #bae6fd; padding-top: 5px;">
+                                                <span style="font-weight: 600; color: #1e293b;">Total:</span>
+                                                <span id="totalAgendamentoEvolucao" style="font-weight: 600; color: #1e293b;">R$ 0,00</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Observações -->
+                                        <div style="margin-bottom: 15px;">
+                                            <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Observações</label>
+                                            <textarea id="observacoesAgendamentoEvolucao" rows="3" placeholder="Observações sobre o agendamento..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; justify-content: flex-end; background: white;">
+                                <button type="button" onclick="fecharModalNovoAgendamento()" style="padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                                <button type="button" onclick="salvarNovoAgendamento()" style="padding: 10px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                    <i class="fas fa-save"></i> Salvar
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -577,7 +668,12 @@
 <script src="/js/menuMobile.js"></script>
 <script>
 // Global variables
-let currentPatientId = {{paciente.id}};
+// currentPatientId será definido pelo config.js
+if (typeof currentPatientId === 'undefined') {
+    currentPatientId = {{paciente.id}};
+} else {
+    currentPatientId = {{paciente.id}};
+}
 let currentStream = null;
 let medicamentosDisponiveis = [];
 
@@ -622,7 +718,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load initial data
     carregarMedicamentos();
-    carregarHistorico();
+    carregarEvolucao();
     carregarFotos();
     carregarExames();
     carregarAnamnese();
@@ -911,16 +1007,7 @@ function carregarMedicamentos() {
         .catch(error => console.error('Erro ao carregar medicamentos:', error));
 }
 
-function carregarHistorico() {
-    fetch(`/sistema/atendimento/historico/${currentPatientId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                exibirHistorico(data.data);
-            }
-        })
-        .catch(error => console.error('Erro ao carregar histórico:', error));
-}
+// Função removida - substituída por carregarEvolucao nas funções de evolução
 
 function carregarFotos() {
     fetch(`/sistema/atendimento/fotos/${currentPatientId}`)
@@ -1381,19 +1468,513 @@ function apagarExame(exameId, nomeExame) {
     }
 }
 
-// History functions
-function filtrarHistorico() {
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    
-    // Implementar filtro do histórico
-    console.log('Filtrando histórico:', { dataInicio, dataFim });
+// Evolução functions
+function filtrarEvolucao() {
+    const status = document.getElementById('statusFiltro').value;
+    carregarEvolucao({ status });
 }
 
-function gerarComprovante() {
-    // Implementar geração de comprovante
-    console.log('Gerando comprovante...');
-    alert('Comprovante gerado com sucesso!');
+function carregarEvolucao(filtros = {}) {
+    if (!currentPatientId) return;
+    
+    let url = `/sistema/atendimento/evolucao/${currentPatientId}`;
+    
+    if (filtros.status && filtros.status !== 'todos') {
+        url += `?status=${filtros.status}`;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                exibirEvolucao(data.data);
+            } else {
+                console.error('Erro ao carregar evolução:', data.message);
+                document.getElementById('evolucaoList').innerHTML = '<div class="empty-state"><p>Erro ao carregar dados.</p></div>';
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar evolução:', error);
+            document.getElementById('evolucaoList').innerHTML = '<div class="empty-state"><p>Erro ao carregar dados.</p></div>';
+        });
+}
+
+function exibirEvolucao(agendamentos) {
+    const container = document.getElementById('evolucaoList');
+    container.innerHTML = '';
+    
+    if (agendamentos.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Nenhum procedimento encontrado.</p></div>';
+        return;
+    }
+    
+    const table = document.createElement('table');
+    table.className = 'evolucao-table';
+    
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Procedimento</th>
+                <th>Profissional</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Pagamento</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${agendamentos.map(agendamento => {
+                const statusClass = getStatusClass(agendamento.status);
+                const statusText = getStatusText(agendamento.status);
+                const isPago = agendamento.pagamentos && agendamento.pagamentos.some(p => p.status === 'pago');
+                 const valorFormatado = parseFloat(agendamento.valor_total || agendamento.valor_final || agendamento.valor || 0).toFixed(2);
+                 const dataAgendamento = new Date(agendamento.data_agendamento);
+                 
+                 return `
+                     <tr>
+                         <td>
+                             <div class="data-hora">
+                                 <div class="data">${dataAgendamento.toLocaleDateString('pt-BR')}</div>
+                                 <div class="hora">${agendamento.horario || 'N/A'}</div>
+                             </div>
+                         </td>
+                        <td>
+                            <div class="procedimento-info">
+                                <div class="nome">${agendamento.produto?.nome || 'Procedimento'}</div>
+                                ${agendamento.observacoes ? `<div class="observacoes">${agendamento.observacoes}</div>` : ''}
+                            </div>
+                        </td>
+                        <td>${agendamento.profissional?.nome || agendamento.Usuario?.nome || 'N/A'}</td>
+                         <td class="valor">R$ ${valorFormatado}</td>
+                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                         <td class="pagamento">
+                             ${isPago ? 
+                                 '<span class="pagamento-pago"><i class="fas fa-check-circle"></i> Pago</span>' : 
+                                 '<span class="pagamento-pendente"><i class="fas fa-clock"></i> Pendente</span>'
+                             }
+                         </td>
+                        <td class="acoes">
+                            <button class="btn-small btn-primary" onclick="verAtendimento(${agendamento.id})" title="Ver Atendimento">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${(agendamento.status === 'agendado' || agendamento.status === 'confirmado' || agendamento.status === 'em_andamento') ? 
+                                `<button class="btn-small btn-warning" onclick="concluirAtendimento(${agendamento.id})" title="Concluir Atendimento">
+                                    <i class="fas fa-check-circle"></i>
+                                </button>` : ''
+                            }
+                            ${agendamento.status === 'concluido' && !isPago ? 
+                                `<button class="btn-small btn-success" onclick="confirmarPagamento(${agendamento.id})" title="Confirmar Pagamento">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    `;
+    
+    container.appendChild(table);
+}
+
+function getStatusClass(status) {
+    const classes = {
+        'agendado': 'status-agendado',
+        'confirmado': 'status-confirmado',
+        'em_andamento': 'status-em-andamento',
+        'concluido': 'status-concluido',
+        'realizado': 'status-realizado',
+        'cancelado': 'status-cancelado',
+        'faltou': 'status-faltou'
+    };
+    return classes[status] || 'status-default';
+}
+
+function getStatusText(status) {
+    const texts = {
+        'agendado': 'Agendado',
+        'confirmado': 'Confirmado',
+        'em_andamento': 'Em Andamento',
+        'concluido': 'Concluído',
+        'realizado': 'Realizado',
+        'cancelado': 'Cancelado',
+        'faltou': 'Faltou'
+    };
+    return texts[status] || status;
+}
+
+function getActionsForStatus(agendamento) {
+    let actions = '';
+    
+    if (agendamento.status === 'realizado') {
+        const isPago = agendamento.pagamentos && agendamento.pagamentos.some(p => p.status === 'pago');
+        
+        if (!isPago) {
+            actions += `
+                <button class="btn-small btn-success" onclick="confirmarPagamento(${agendamento.id})">
+                    <i class="fas fa-check"></i> Confirmar Pagamento
+                </button>
+            `;
+        }
+    }
+    
+    return actions;
+}
+
+function getPagamentosInfo(pagamentos) {
+    const pago = pagamentos.find(p => p.status === 'pago');
+    if (pago) {
+        return `<p class="pagamento-info"><i class="fas fa-check-circle text-success"></i> Pago em ${new Date(pago.data_pagamento).toLocaleDateString('pt-BR')}</p>`;
+    }
+    return '<p class="pagamento-info"><i class="fas fa-clock text-warning"></i> Pagamento pendente</p>';
+}
+
+function confirmarPagamento(agendamentoId) {
+    if (confirm('Confirmar o pagamento deste procedimento?')) {
+        fetch(`/sistema/agendamentos/${agendamentoId}/pagamento`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                metodo_pagamento: 'dinheiro'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Pagamento confirmado com sucesso!');
+                carregarEvolucao();
+            } else {
+                alert('Erro ao confirmar pagamento: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao confirmar pagamento');
+        });
+    }
+}
+
+function concluirAtendimento(agendamentoId) {
+    if (confirm('Concluir este atendimento?')) {
+        fetch(`/sistema/agendamentos/${agendamentoId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                status: 'concluido'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Atendimento concluído com sucesso!');
+                carregarEvolucao();
+            } else {
+                alert('Erro ao concluir atendimento: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao concluir atendimento');
+        });
+    }
+}
+
+function verAtendimento(agendamentoId) {
+    // Buscar detalhes do agendamento
+    fetch(`/sistema/agendamentos/${agendamentoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarModalDetalhes(data.data);
+            } else {
+                alert('Erro ao carregar detalhes do agendamento');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao carregar detalhes');
+        });
+}
+
+function mostrarModalDetalhes(agendamento) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; justify-content: center; align-items: center;';
+    
+    const isPago = agendamento.pagamentos && agendamento.pagamentos.some(p => p.status === 'pago');
+     const valorTotal = parseFloat(agendamento.valor_total || agendamento.valor_final || agendamento.valor || 0).toFixed(2);
+     const dataAgendamento = new Date(agendamento.data_agendamento);
+     
+     modal.innerHTML = `
+         <div style="background: white; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+             <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                 <h3 style="margin: 0; color: #1e293b;">Detalhes do Atendimento</h3>
+                 <button onclick="fecharModalDetalhes()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+             </div>
+             <div style="padding: 20px;">
+                 <div style="margin-bottom: 20px;">
+                     <h4 style="margin: 0 0 10px 0; color: #374151;">Informações Gerais</h4>
+                     <div style="background: #f9fafb; padding: 15px; border-radius: 6px;">
+                         <p><strong>Paciente:</strong> ${agendamento.paciente?.nome || 'N/A'}</p>
+                         <p><strong>Profissional:</strong> ${agendamento.profissional?.nome || agendamento.Usuario?.nome || 'N/A'}</p>
+                         <p><strong>Data:</strong> ${dataAgendamento.toLocaleDateString('pt-BR')}</p>
+                         <p><strong>Horário:</strong> ${agendamento.horario || 'N/A'}</p>
+                         <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(agendamento.status)}">${getStatusText(agendamento.status)}</span></p>
+                     </div>
+                 </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #374151;">Procedimentos</h4>
+                    <div style="background: #f9fafb; padding: 15px; border-radius: 6px;">
+                        ${agendamento.itens && agendamento.itens.length > 0 ? 
+                            agendamento.itens.map(item => `
+                                <div style="border-bottom: 1px solid #e5e7eb; padding: 10px 0; margin-bottom: 10px;">
+                                    <p><strong>${item.produto?.nome || 'Procedimento'}</strong></p>
+                                    <p>Quantidade: ${item.quantidade || 1}</p>
+                                    <p>Valor unitário: R$ ${parseFloat(item.valor_unitario || 0).toFixed(2)}</p>
+                                    <p>Valor total: R$ ${parseFloat(item.valor_total || 0).toFixed(2)}</p>
+                                </div>
+                            `).join('') : 
+                            `<p><strong>${agendamento.produto?.nome || 'Procedimento'}</strong></p>
+                             <p>Valor: R$ ${valorTotal}</p>`
+                        }
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #374151;">Pagamento</h4>
+                    <div style="background: #f9fafb; padding: 15px; border-radius: 6px;">
+                        <p><strong>Valor Total:</strong> R$ ${valorTotal}</p>
+                        <p><strong>Status:</strong> ${isPago ? 
+                            '<span style="color: #28a745; font-weight: 600;"><i class="fas fa-check-circle"></i> Pago</span>' : 
+                            '<span style="color: #ffc107; font-weight: 600;"><i class="fas fa-clock"></i> Pendente</span>'
+                        }</p>
+                        ${agendamento.observacoes ? `<p><strong>Observações:</strong> ${agendamento.observacoes}</p>` : ''}
+                    </div>
+                </div>
+                
+                ${agendamento.status === 'realizado' && !isPago ? `
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="confirmarPagamentoModal(${agendamento.id})" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            <i class="fas fa-check"></i> Confirmar Pagamento
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Função para fechar modal
+    window.fecharModalDetalhes = function() {
+        document.body.removeChild(modal);
+        delete window.fecharModalDetalhes;
+        delete window.confirmarPagamentoModal;
+    };
+    
+    // Função para confirmar pagamento no modal
+    window.confirmarPagamentoModal = function(agendamentoId) {
+        confirmarPagamento(agendamentoId);
+        fecharModalDetalhes();
+    };
+}
+
+let itensAgendamentoEvolucao = [];
+
+function abrirModalNovoAgendamento() {
+    // Preencher informações do paciente
+    const nomeElement = document.querySelector('.patient-name');
+    const pacienteNome = nomeElement ? nomeElement.textContent : 'Paciente Atual';
+    document.getElementById('pacienteNomeAgendamento').textContent = pacienteNome;
+    document.getElementById('pacienteIdAgendamento').value = currentPatientId;
+    
+    // Carregar profissionais e produtos
+    carregarProfissionaisEvolucao();
+    carregarProdutosEvolucao();
+    
+    // Limpar itens
+    itensAgendamentoEvolucao = [];
+    atualizarListaItensEvolucao();
+    
+    document.getElementById('novoAgendamentoModal').style.display = 'flex';
+}
+
+function fecharModalNovoAgendamento() {
+    document.getElementById('novoAgendamentoModal').style.display = 'none';
+    document.getElementById('novoAgendamentoForm').reset();
+    itensAgendamentoEvolucao = [];
+    document.getElementById('secaoItensEvolucao').style.display = 'none';
+    document.getElementById('resumoValoresEvolucao').style.display = 'none';
+}
+
+function carregarProfissionaisEvolucao() {
+    fetch('/sistema/profissionais')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('profissionalSelectEvolucao');
+                select.innerHTML = '<option value="">Selecione um profissional</option>';
+                data.data.forEach(profissional => {
+                    const option = document.createElement('option');
+                    option.value = profissional.id;
+                    option.textContent = profissional.nome;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Erro ao carregar profissionais:', error));
+}
+
+function carregarProdutosEvolucao() {
+    fetch('/sistema/produtos')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.produtosEvolucao = data.data;
+            }
+        })
+        .catch(error => console.error('Erro ao carregar produtos:', error));
+}
+
+function alterarTipoAgendamentoEvolucao() {
+    const tipo = document.getElementById('tipoAgendamentoEvolucao').value;
+    const secaoItens = document.getElementById('secaoItensEvolucao');
+    const resumoValores = document.getElementById('resumoValoresEvolucao');
+    
+    if (tipo === 'procedimentos') {
+        secaoItens.style.display = 'block';
+        resumoValores.style.display = 'block';
+    } else {
+        secaoItens.style.display = 'none';
+        resumoValores.style.display = 'none';
+        itensAgendamentoEvolucao = [];
+        atualizarListaItensEvolucao();
+    }
+}
+
+function adicionarItemEvolucao() {
+    if (!window.produtosEvolucao || window.produtosEvolucao.length === 0) {
+        alert('Carregando produtos...');
+        return;
+    }
+    
+    const produto = prompt('Digite o nome do produto/procedimento:');
+    if (!produto) return;
+    
+    const produtoEncontrado = window.produtosEvolucao.find(p => 
+        p.nome.toLowerCase().includes(produto.toLowerCase())
+    );
+    
+    if (produtoEncontrado) {
+        const item = {
+            id: Date.now(),
+            produto_id: produtoEncontrado.id,
+            nome: produtoEncontrado.nome,
+            quantidade: 1,
+            valor_unitario: parseFloat(produtoEncontrado.preco),
+            desconto: 0,
+            valor_total: parseFloat(produtoEncontrado.preco)
+        };
+        
+        itensAgendamentoEvolucao.push(item);
+        atualizarListaItensEvolucao();
+        calcularTotalEvolucao();
+    } else {
+        alert('Produto não encontrado.');
+    }
+}
+
+function atualizarListaItensEvolucao() {
+    const lista = document.getElementById('listaItensEvolucao');
+    
+    if (itensAgendamentoEvolucao.length === 0) {
+        lista.innerHTML = '<p style="text-align: center; color: #6b7280; margin: 10px 0;">Nenhum item adicionado</p>';
+        return;
+    }
+    
+    lista.innerHTML = itensAgendamentoEvolucao.map(item => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #e5e7eb; background: white; border-radius: 4px; margin-bottom: 5px;">
+            <div style="flex: 1;">
+                <strong>${item.nome}</strong><br>
+                <small>Qtd: ${item.quantidade} | Valor: R$ ${item.valor_unitario.toFixed(2)}</small>
+            </div>
+            <div style="text-align: right;">
+                <strong>R$ ${item.valor_total.toFixed(2)}</strong><br>
+                <button type="button" onclick="removerItemEvolucao(${item.id})" style="background: #ef4444; color: white; border: none; border-radius: 3px; padding: 2px 6px; font-size: 11px; cursor: pointer;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function removerItemEvolucao(itemId) {
+    itensAgendamentoEvolucao = itensAgendamentoEvolucao.filter(item => item.id !== itemId);
+    atualizarListaItensEvolucao();
+    calcularTotalEvolucao();
+}
+
+function calcularTotalEvolucao() {
+    const subtotal = itensAgendamentoEvolucao.reduce((sum, item) => sum + item.valor_total, 0);
+    const descontoTotal = itensAgendamentoEvolucao.reduce((sum, item) => sum + item.desconto, 0);
+    const total = subtotal - descontoTotal;
+    
+    document.getElementById('subtotalAgendamentoEvolucao').textContent = `R$ ${subtotal.toFixed(2)}`;
+    document.getElementById('descontoTotalAgendamentoEvolucao').textContent = `R$ ${descontoTotal.toFixed(2)}`;
+    document.getElementById('totalAgendamentoEvolucao').textContent = `R$ ${total.toFixed(2)}`;
+}
+
+function salvarNovoAgendamento(event) {
+    if (event) event.preventDefault();
+    
+    const agendamento = {
+        paciente_id: currentPatientId,
+        profissional_id: document.getElementById('profissionalSelectEvolucao').value,
+        data_agendamento: document.getElementById('dataAgendamentoEvolucao').value,
+        horario: document.getElementById('horarioAgendamentoEvolucao').value,
+        observacoes: document.getElementById('observacoesAgendamentoEvolucao').value,
+        tipo_agendamento: document.getElementById('tipoAgendamentoEvolucao').value,
+        itens: itensAgendamentoEvolucao,
+        status: 'agendado'
+    };
+    
+    if (!agendamento.profissional_id || !agendamento.data_agendamento || !agendamento.horario) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+    
+    if (agendamento.tipo_agendamento === 'procedimentos' && itensAgendamentoEvolucao.length === 0) {
+        alert('Adicione pelo menos um procedimento/produto.');
+        return;
+    }
+    
+    fetch('/sistema/agendamento', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(agendamento)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Agendamento criado com sucesso!');
+            fecharModalNovoAgendamento();
+            carregarEvolucao();
+        } else {
+            alert('Erro ao criar agendamento: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao criar agendamento');
+    });
 }
 
 function finalizarAtendimento() {
@@ -1674,4 +2255,38 @@ function getStatusText(status) {
         default: return status;
     }
 }
+</script>
+
+<!-- Scripts modulares - ordem importante para dependências -->
+<script src="/js/atendimento/config.js"></script>
+<script>
+// Aguardar config.js carregar antes dos outros módulos
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar outros scripts após config.js
+    const scripts = [
+        '/js/atendimento/tabs.js',
+        '/js/atendimento/evolucao.js',
+        '/js/atendimento/anamnese.js',
+        '/js/atendimento/exames.js',
+        '/js/atendimento/fotos.js',
+        '/js/atendimento/prescricao.js',
+        '/js/atendimento/main.js'
+    ];
+    
+    let loadedScripts = 0;
+    scripts.forEach((src, index) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = function() {
+            loadedScripts++;
+            if (loadedScripts === scripts.length) {
+                // Todos os scripts carregados, inicializar aplicação
+                if (typeof AtendimentoApp !== 'undefined') {
+                    AtendimentoApp.init();
+                }
+            }
+        };
+        document.head.appendChild(script);
+    });
+});
 </script>

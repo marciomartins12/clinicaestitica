@@ -74,6 +74,7 @@ router.post('/agendamentos', authController.isLoggedIn, AgendamentoController.cr
 router.get('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.buscarAgendamentoPorId);
 router.put('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.atualizarAgendamento);
 router.put('/agendamentos/:id/status', authController.isLoggedIn, AgendamentoController.alterarStatus);
+router.post('/agendamentos/:id/pagamento', authController.isLoggedIn, AgendamentoController.confirmarPagamento);
 router.delete('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.excluirAgendamento);
 router.get('/pacientes/buscar', authController.isLoggedIn, AgendamentoController.buscarPacientes);
 router.get('/profissionais', authController.isLoggedIn, AgendamentoController.buscarProfissionais);
@@ -117,6 +118,7 @@ router.post('/atendimento/prescricao', authController.isLoggedIn, AtendimentoCon
 router.get('/atendimento/prescricoes/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarPrescricoes);
 router.get('/atendimento/historico/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarHistorico);
 router.get('/atendimento/medicamentos', authController.isLoggedIn, AtendimentoController.buscarMedicamentos);
+router.get('/atendimento/evolucao/:pacienteId', authController.isLoggedIn, AgendamentoController.buscarAgendamentos);
 router.post('/atendimento/finalizar/:pacienteId', authController.isLoggedIn, AtendimentoController.finalizarAtendimento);
 
 // Rota para atendimento

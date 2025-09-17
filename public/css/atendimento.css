@@ -1143,9 +1143,218 @@
     font-style: italic;
 }
 
+/* Evolução Styles */
+.evolucao-filters {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.evolucao-filters .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.evolucao-filters label {
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+.evolucao-table-container {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.evolucao-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.evolucao-table thead {
+    background: #f8f9fa;
+}
+
+.evolucao-table th {
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.evolucao-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.evolucao-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.data-hora {
+    text-align: center;
+}
+
+.data-hora .data {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.data-hora .hora {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.procedimento-info .nome {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.procedimento-info .observacoes {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.valor {
+    font-weight: 600;
+    color: #28a745;
+    text-align: right;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.status-agendado {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmado {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-em-andamento {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-concluido {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-realizado {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-cancelado {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-faltou {
+    background: #ffeaa7;
+    color: #6c5ce7;
+}
+
+.btn-small.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-small.btn-warning:hover {
+    background: #e0a800;
+}
+
+.pagamento {
+    text-align: center;
+}
+
+.pagamento-pago {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.pagamento-pendente {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+.acoes {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-small {
+    padding: 6px 10px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: all 0.2s ease;
+}
+
+.btn-small:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-small.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-small.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-small.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-small.btn-success:hover {
+    background: #1e7e34;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state p {
+    margin: 0;
+    font-style: italic;
+}
+
 @media (max-width: 768px) {
     .search-input-group {
         flex-direction: column;
+        gap: 10px;
+    }
+    
+    .search-input {
+        width: 100%;
     }
     
     .patient-info {
@@ -1168,6 +1377,27 @@
     }
     
     .exame-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .evolucao-filters .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .evolucao-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .evolucao-actions {
+        justify-content: center;
+    }
+    
+    .content-actions {
         flex-direction: column;
         gap: 10px;
     }

@@ -5,9 +5,20 @@ class AgendamentoController {
     // Buscar agendamentos com filtros
     static async buscarAgendamentos(req, res) {
         try {
-            const { mes, ano, busca, page = 1, limit = 10 } = req.query;
+            const { mes, ano, busca, page = 1, limit = 10, paciente_id, status } = req.query;
             
             let whereClause = {};
+            
+            // Filtro por paciente_id (da URL ou query)
+            const pacienteIdParam = req.params.pacienteId || paciente_id;
+            if (pacienteIdParam) {
+                whereClause.paciente_id = pacienteIdParam;
+            }
+            
+            // Filtro por status
+            if (status) {
+                whereClause.status = status;
+            }
             
             // Filtro por mês e ano
             if (mes && ano) {
@@ -81,9 +92,20 @@ class AgendamentoController {
             
             const totalPages = Math.ceil(count / limit);
             
+            // Adicionar campo virtual horario
+            const agendamentosComHorario = agendamentos.map(agendamento => {
+                const agendamentoData = agendamento.toJSON();
+                if (agendamentoData.data_agendamento) {
+                    const data = new Date(agendamentoData.data_agendamento);
+                    agendamentoData.horario = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    agendamentoData.valor_total = agendamentoData.valor_final || agendamentoData.valor || 0;
+                }
+                return agendamentoData;
+            });
+            
             res.json({
                 success: true,
-                data: agendamentos,
+                data: agendamentosComHorario,
                 pagination: {
                     currentPage: parseInt(page),
                     totalPages,
@@ -351,7 +373,14 @@ class AgendamentoController {
                             model: Produto,
                             as: 'produto',
                             attributes: ['id', 'nome', 'categoria', 'preco']
-                        }]
+                        }],
+                        required: false
+                    },
+                    {
+                        model: Pagamento,
+                        as: 'pagamentos',
+                        attributes: ['id', 'status', 'valor_final', 'data_pagamento'],
+                        required: false
                     }
                 ]
             });
@@ -363,9 +392,17 @@ class AgendamentoController {
                 });
             }
             
+            // Adicionar campos virtuais
+            const agendamentoData = agendamento.toJSON();
+            if (agendamentoData.data_agendamento) {
+                const data = new Date(agendamentoData.data_agendamento);
+                agendamentoData.horario = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                agendamentoData.valor_total = agendamentoData.valor_final || agendamentoData.valor || 0;
+            }
+            
             res.json({
                 success: true,
-                data: agendamento
+                data: agendamentoData
             });
             
         } catch (error) {
@@ -512,6 +549,56 @@ class AgendamentoController {
             res.status(500).json({
                 success: false,
                 message: 'Erro ao alterar status'
+            });
+        }
+    }
+    
+    // Confirmar pagamento
+    static async confirmarPagamento(req, res) {
+        try {
+            const { id } = req.params;
+            const { valor_pago, metodo_pagamento = 'dinheiro' } = req.body;
+            
+            const agendamento = await Agendamento.findByPk(id, {
+                include: [{
+                    model: Paciente,
+                    as: 'paciente',
+                    attributes: ['id']
+                }]
+            });
+            
+            if (!agendamento) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Agendamento não encontrado'
+                });
+            }
+            
+            const valorFinal = valor_pago || agendamento.valor_final || agendamento.valor || 0;
+            
+            // Criar registro de pagamento
+            const pagamento = await Pagamento.create({
+                paciente_id: agendamento.paciente_id,
+                agendamento_id: id,
+                valor: valorFinal,
+                desconto: 0,
+                valor_final: valorFinal,
+                forma_pagamento: metodo_pagamento,
+                status: 'pago',
+                data_pagamento: new Date()
+            });
+            
+            res.json({
+                success: true,
+                message: 'Pagamento confirmado com sucesso',
+                data: pagamento
+            });
+            
+        } catch (error) {
+            console.error('Erro ao confirmar pagamento:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao confirmar pagamento'
             });
         }
     }
