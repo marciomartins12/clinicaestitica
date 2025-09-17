@@ -5,6 +5,7 @@ const RecadoController = require('../controllers/recadoController');
 const AgendamentoController = require('../controllers/agendamentoController');
 const AtendimentoController = require('../controllers/atendimentoController');
 const FinanceiroController = require('../controllers/financeiroController');
+const ProdutoController = require('../controllers/produtoController');
 const { Usuario, Clinica } = require('../models');
 const PacienteController = require('../controllers/pacienteController');
 
@@ -99,7 +100,12 @@ router.get('/produtos', authController.isLoggedIn, async (req, res) => {
 
 // APIs para produtos
 router.get('/produtos/procedimentos', authController.isLoggedIn, AgendamentoController.buscarProdutos);
-router.get('/produtos/api', authController.isLoggedIn, AgendamentoController.buscarTodosProdutos);
+router.get('/produtos/api', authController.isLoggedIn, ProdutoController.buscarProdutos);
+router.get('/produtos/api/:id', authController.isLoggedIn, ProdutoController.buscarProdutoPorId);
+router.post('/produtos/api', authController.isLoggedIn, ProdutoController.criarProduto);
+router.put('/produtos/api/:id', authController.isLoggedIn, ProdutoController.atualizarProduto);
+router.delete('/produtos/api/:id', authController.isLoggedIn, ProdutoController.excluirProduto);
+router.get('/produtos/todos', authController.isLoggedIn, AgendamentoController.buscarTodosProdutos);
 
 // Rotas para recados
 router.post('/recados', authController.isLoggedIn, RecadoController.criarRecado);
