@@ -251,6 +251,19 @@ class AgendamentoController {
                 }
             }
             
+            // Criar pagamento pendente se há valor
+            if (valor_final && valor_final > 0) {
+                await Pagamento.create({
+                    paciente_id,
+                    agendamento_id: novoAgendamento.id,
+                    valor: valor_final,
+                    desconto: desconto || 0,
+                    valor_final,
+                    forma_pagamento: 'dinheiro', // Padrão
+                    status: 'pendente'
+                });
+            }
+
             // Buscar agendamento criado com includes
             const agendamentoCriado = await Agendamento.findByPk(novoAgendamento.id, {
                 include: [
@@ -635,18 +648,38 @@ class AgendamentoController {
             
             const valorFinal = valor_pago || agendamento.valor_final || agendamento.valor || 0;
             
-            // Criar registro de pagamento
-            const pagamento = await Pagamento.create({
-                paciente_id: agendamento.paciente_id,
-                agendamento_id: id,
-                valor: valorFinal,
-                desconto: 0,
-                valor_final: valorFinal,
-                forma_pagamento: metodo_pagamento,
-                status: 'pago',
-                data_pagamento: new Date(),
-                confirmado_por: usuarioId
+            // Verificar se já existe pagamento pendente para este agendamento
+            let pagamento = await Pagamento.findOne({
+                where: {
+                    agendamento_id: id,
+                    status: 'pendente'
+                }
             });
+            
+            if (pagamento) {
+                // Atualizar pagamento existente
+                await pagamento.update({
+                    valor: valorFinal,
+                    valor_final: valorFinal,
+                    forma_pagamento: metodo_pagamento,
+                    status: 'pago',
+                    data_pagamento: new Date(),
+                    confirmado_por: usuarioId
+                });
+            } else {
+                // Criar novo registro de pagamento se não existir
+                pagamento = await Pagamento.create({
+                    paciente_id: agendamento.paciente_id,
+                    agendamento_id: id,
+                    valor: valorFinal,
+                    desconto: 0,
+                    valor_final: valorFinal,
+                    forma_pagamento: metodo_pagamento,
+                    status: 'pago',
+                    data_pagamento: new Date(),
+                    confirmado_por: usuarioId
+                });
+            }
             
             res.json({
                 success: true,

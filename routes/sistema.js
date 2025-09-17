@@ -4,6 +4,7 @@ const authController = require('../controllers/authController');
 const RecadoController = require('../controllers/recadoController');
 const AgendamentoController = require('../controllers/agendamentoController');
 const AtendimentoController = require('../controllers/atendimentoController');
+const FinanceiroController = require('../controllers/financeiroController');
 const { Usuario, Clinica } = require('../models');
 const PacienteController = require('../controllers/pacienteController');
 
@@ -178,5 +179,9 @@ router.get('/atendimento/:id', authController.isLoggedIn, async (req, res) => {
     }
 });
 
+// Rotas para financeiro
+router.get('/financeiro', authController.isLoggedIn, FinanceiroController.pageFinanceiro);
+router.get('/financeiro/dashboard', authController.isLoggedIn, FinanceiroController.buscarDashboardFinanceiro);
+router.get('/financeiro/relatorio', authController.isLoggedIn, FinanceiroController.buscarRelatorioDetalhado);
 
 module.exports = router;

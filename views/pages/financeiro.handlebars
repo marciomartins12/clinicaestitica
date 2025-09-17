@@ -1,0 +1,758 @@
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-spa"></i> {{clinica.nome}}</h2>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/sistema/dashboard" class="nav-link"><i class="fas fa-home"></i>Inicio</a></li>
+            <li class="nav-item"><a href="/sistema/agenda" class="nav-link"><i class="fas fa-calendar-alt"></i>Agenda</a></li>
+            <li class="nav-item"><a href="/sistema/pacientes" class="nav-link"><i class="fas fa-users"></i>Pacientes</a></li>
+            <li class="nav-item"><a href="/sistema/atendimento" class="nav-link"><i class="fas fa-user-md"></i>Atendimentos</a></li>
+            <li class="nav-item"><a href="/sistema/financeiro" class="nav-link active"><i class="fas fa-dollar-sign"></i>Financeiro</a></li>
+            <li class="nav-item"><a href="/sistema/produtos" class="nav-link"><i class="fas fa-box"></i>Produtos</a></li>
+            <li class="nav-item"><a href="/sistema/minhaClinica" class="nav-link"><i class="fas fa-clinic-medical"></i>Minha Clínica</a></li>
+        </ul>
+
+        <!-- User Section -->
+        <div class="sidebar-user">
+            <div class="user-profile">
+                <div><i class="fa-solid fa-user"></i></div>
+                <div class="user-details">
+                    <div class="user-name-sidebar">{{user.nome}}</div>
+                    <div class="user-role">{{user.tipo_usuario}}</div>
+                </div>
+            </div>
+            <a href="/sistema/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content financeiro-container">
+        <!-- Header -->
+        <div class="financeiro-header">
+            <h1 class="financeiro-title">
+                <i class="fas fa-dollar-sign"></i>
+                Controle Financeiro
+            </h1>
+            <button class="btn btn-secondary" onclick="abrirRelatorioDetalhado()">
+                <i class="fas fa-file-alt"></i>
+                Relatório Completo
+            </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters-section">
+            <div class="filters-row">
+                <div class="form-group">
+                    <label class="form-label">Período</label>
+                    <select id="periodoSelect" class="form-select" onchange="debouncedCarregarDashboard()">
+                        <option value="hoje">Hoje</option>
+                        <option value="semana">Esta Semana</option>
+                        <option value="mes" selected>Este Mês</option>
+                        <option value="ano">Este Ano</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" onclick="atualizarDados()">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Resumo -->
+        <div class="financial-section">
+            <div class="financial-card">
+                <h3><i class="fas fa-chart-line"></i> Receitas</h3>
+                <div class="amount" id="totalReceitas">R$ 0,00</div>
+                <div class="financial-details">
+                    <div class="detail-item">
+                        <div class="label">Quantidade</div>
+                        <div class="value" id="quantidadeReceitas">0</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Média</div>
+                        <div class="value" id="mediaReceitas">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="financial-card">
+                <h3><i class="fas fa-clock"></i> Pendentes</h3>
+                <div class="amount" id="totalPendentes" style="color: #f59e0b;">R$ 0,00</div>
+                <div class="financial-details">
+                    <div class="detail-item">
+                        <div class="label">Quantidade</div>
+                        <div class="value" id="quantidadePendentes">0</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Mais Antigo</div>
+                        <div class="value" id="pendenteAntigo">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-section">
+            <div class="financial-card chart-main">
+                <h3><i class="fas fa-chart-area"></i> Receitas por Dia</h3>
+                <canvas id="receitasChart" width="400" height="200" style="max-height: 200px; height: 200px !important;"></canvas>
+            </div>
+
+            <div class="financial-card chart-secondary">
+                <h3><i class="fas fa-chart-pie"></i> Procedimentos Populares</h3>
+                <canvas id="procedimentosChart" width="300" height="200" style="max-height: 200px; height: 200px !important;"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabela de Receitas Recentes -->
+        <div class="financial-card">
+            <h3><i class="fas fa-list"></i> Receitas Recentes</h3>
+            
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Paciente</th>
+                            <th>Procedimento</th>
+                            <th>Valor</th>
+                            <th>Confirmado por</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receitasTableBody">
+                        <!-- Dados carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tabela de Pendentes -->
+        <div class="financial-card">
+            <h3><i class="fas fa-exclamation-triangle"></i> Pagamentos Pendentes</h3>
+            
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data Agendamento</th>
+                            <th>Paciente</th>
+                            <th>Procedimento</th>
+                            <th>Valor</th>
+                            <th>Dias Pendente</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendentesTableBody">
+                        <!-- Dados carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Relatório Detalhado -->
+<div id="modalRelatorio" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="background: white; border-radius: 8px; width: 95%; max-width: 1200px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;"><i class="fas fa-file-alt"></i> Relatório Detalhado</h3>
+            <button onclick="fecharRelatorioDetalhado()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+        </div>
+        
+        <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="form-group">
+                    <label class="form-label">Data Início</label>
+                    <input type="date" id="dataInicioRelatorio" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Data Fim</label>
+                    <input type="date" id="dataFimRelatorio" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="statusRelatorio" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pago">Pago</option>
+                        <option value="pendente">Pendente</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Forma Pagamento</label>
+                    <select id="formaPagamentoRelatorio" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cartao_credito">Cartão Crédito</option>
+                        <option value="cartao_debito">Cartão Débito</option>
+                        <option value="pix">PIX</option>
+                        <option value="transferencia">Transferência</option>
+                        <option value="cheque">Cheque</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; align-items: end;">
+                    <button class="btn btn-primary" onclick="buscarRelatorioDetalhado()">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div style="flex: 1; overflow-y: auto; padding: 20px;">
+            <div id="relatorioContent">
+                <!-- Conteúdo do relatório carregado via JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let receitasChart = null;
+let procedimentosChart = null;
+let isLoadingDashboard = false;
+
+// Carregar dados ao inicializar a página
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar observer para prevenir redimensionamento dos canvas
+    const canvasReceitas = document.getElementById('receitasChart');
+    const canvasProcedimentos = document.getElementById('procedimentosChart');
+    
+    if (canvasReceitas) {
+        canvasReceitas.style.height = '200px';
+        canvasReceitas.style.maxHeight = '200px';
+    }
+    
+    if (canvasProcedimentos) {
+        canvasProcedimentos.style.height = '200px';
+        canvasProcedimentos.style.maxHeight = '200px';
+    }
+    
+    carregarDashboard();
+});
+
+// Prevenir múltiplas chamadas simultâneas
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function carregarDashboard() {
+    if (isLoadingDashboard) {
+        console.log('Dashboard já está carregando, ignorando chamada duplicada');
+        return;
+    }
+    
+    isLoadingDashboard = true;
+    const periodo = document.getElementById('periodoSelect').value;
+    
+    fetch(`/sistema/financeiro/dashboard?periodo=${periodo}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                atualizarResumo(data.data);
+                atualizarGraficos(data.data);
+                atualizarTabelaReceitas(data.data.receitas);
+                atualizarTabelaPendentes(data.data.pendentes);
+            } else {
+                console.error('Erro ao carregar dashboard:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        })
+        .finally(() => {
+            isLoadingDashboard = false;
+        });
+}
+
+function atualizarResumo(data) {
+    const { resumo } = data;
+    
+    document.getElementById('totalReceitas').textContent = formatarMoeda(resumo.totalReceitas);
+    document.getElementById('quantidadeReceitas').textContent = resumo.quantidadeReceitas;
+    document.getElementById('mediaReceitas').textContent = formatarMoeda(resumo.quantidadeReceitas > 0 ? resumo.totalReceitas / resumo.quantidadeReceitas : 0);
+    
+    document.getElementById('totalPendentes').textContent = formatarMoeda(resumo.totalPendentes);
+    document.getElementById('quantidadePendentes').textContent = resumo.quantidadePendentes;
+}
+
+function atualizarGraficos(data) {
+    // Gráfico de receitas por dia
+    const canvasReceitas = document.getElementById('receitasChart');
+    if (!canvasReceitas) {
+        console.error('Canvas receitasChart não encontrado');
+        return;
+    }
+    
+    // Destruir gráfico anterior se existir
+    if (receitasChart) {
+        receitasChart.destroy();
+        receitasChart = null;
+    }
+    
+    // Limpar canvas
+    const ctxReceitas = canvasReceitas.getContext('2d');
+    ctxReceitas.clearRect(0, 0, canvasReceitas.width, canvasReceitas.height);
+    
+    const diasOrdenados = Object.keys(data.receitasPorDia).sort();
+    const valoresReceitas = diasOrdenados.map(dia => data.receitasPorDia[dia]);
+    
+    receitasChart = new Chart(ctxReceitas, {
+        type: 'line',
+        data: {
+            labels: diasOrdenados.map(dia => new Date(dia).toLocaleDateString('pt-BR')),
+            datasets: [{
+                label: 'Receitas',
+                data: valoresReceitas,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 0 // Desabilitar animações
+            },
+            interaction: {
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            onResize: function(chart, size) {
+                // Prevenir redimensionamento automático
+                chart.canvas.style.height = '200px';
+            }
+        }
+    });
+    
+    // Gráfico de procedimentos populares
+    const canvasProcedimentos = document.getElementById('procedimentosChart');
+    if (!canvasProcedimentos) {
+        console.error('Canvas procedimentosChart não encontrado');
+        return;
+    }
+    
+    // Destruir gráfico anterior se existir
+    if (procedimentosChart) {
+        procedimentosChart.destroy();
+        procedimentosChart = null;
+    }
+    
+    // Limpar canvas
+    const ctxProcedimentos = canvasProcedimentos.getContext('2d');
+    ctxProcedimentos.clearRect(0, 0, canvasProcedimentos.width, canvasProcedimentos.height);
+    
+    // Ordenar procedimentos por quantidade e pegar os top 5
+    const procedimentosOrdenados = Object.entries(data.receitasPorProcedimento)
+        .sort((a, b) => b[1].quantidade - a[1].quantidade)
+        .slice(0, 5);
+    
+    const procedimentos = procedimentosOrdenados.map(([nome]) => nome);
+    const quantidades = procedimentosOrdenados.map(([, dados]) => dados.quantidade);
+    
+    procedimentosChart = new Chart(ctxProcedimentos, {
+        type: 'doughnut',
+        data: {
+            labels: procedimentos,
+            datasets: [{
+                data: quantidades,
+                backgroundColor: [
+                    '#2563eb',
+                    '#10b981',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 0 // Desabilitar animações
+            },
+            interaction: {
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const procedimento = context.label;
+                            const quantidade = context.parsed;
+                            const dados = data.receitasPorProcedimento[procedimento];
+                            const total = dados ? dados.total : 0;
+                            return `${procedimento}: ${quantidade} vezes (R$ ${total.toFixed(2)})`;
+                        }
+                    }
+                }
+            },
+            onResize: function(chart, size) {
+                // Prevenir redimensionamento automático
+                chart.canvas.style.height = '200px';
+            }
+        }
+    });
+}
+
+function atualizarTabelaReceitas(receitas) {
+    const tbody = document.getElementById('receitasTableBody');
+    tbody.innerHTML = '';
+    
+    receitas.slice(0, 10).forEach(receita => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(receita.data_pagamento).toLocaleDateString('pt-BR')}</td>
+            <td>${receita.paciente?.nome || 'N/A'}</td>
+            <td>${receita.agendamento?.produto?.nome || 'Procedimento'}</td>
+            <td>${formatarMoeda(receita.valor_final)}</td>
+            <td>${receita.confirmador?.nome || 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function atualizarTabelaPendentes(pendentes) {
+    const tbody = document.getElementById('pendentesTableBody');
+    tbody.innerHTML = '';
+    
+    pendentes.slice(0, 10).forEach(pendente => {
+        const diasPendente = Math.floor((new Date() - new Date(pendente.criado_em)) / (1000 * 60 * 60 * 24));
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${pendente.agendamento?.data_agendamento ? new Date(pendente.agendamento.data_agendamento).toLocaleDateString('pt-BR') : 'N/A'}</td>
+            <td>${pendente.paciente?.nome || 'N/A'}</td>
+            <td>${pendente.agendamento?.produto?.nome || 'Procedimento'}</td>
+            <td>${formatarMoeda(pendente.valor_final)}</td>
+            <td>${diasPendente} dias</td>
+            <td>
+                <button class="btn-small btn-success" onclick="confirmarPagamentoPendente(${pendente.agendamento_id})">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Criar versão com debounce para evitar chamadas excessivas
+const debouncedCarregarDashboard = debounce(carregarDashboard, 300);
+
+function atualizarDados() {
+    if (!isLoadingDashboard) {
+        carregarDashboard();
+    }
+}
+
+function abrirRelatorioDetalhado() {
+    document.getElementById('modalRelatorio').style.display = 'flex';
+    
+    // Definir datas padrão (último mês)
+    const hoje = new Date();
+    const mesPassado = new Date(hoje.getFullYear(), hoje.getMonth() - 1, hoje.getDate());
+    
+    document.getElementById('dataInicioRelatorio').value = mesPassado.toISOString().split('T')[0];
+    document.getElementById('dataFimRelatorio').value = hoje.toISOString().split('T')[0];
+    
+    buscarRelatorioDetalhado();
+}
+
+function fecharRelatorioDetalhado() {
+    document.getElementById('modalRelatorio').style.display = 'none';
+}
+
+function buscarRelatorioDetalhado() {
+    const dataInicio = document.getElementById('dataInicioRelatorio').value;
+    const dataFim = document.getElementById('dataFimRelatorio').value;
+    const status = document.getElementById('statusRelatorio').value;
+    const formaPagamento = document.getElementById('formaPagamentoRelatorio').value;
+    
+    const params = new URLSearchParams();
+    if (dataInicio) params.append('dataInicio', dataInicio);
+    if (dataFim) params.append('dataFim', dataFim);
+    if (status) params.append('status', status);
+    if (formaPagamento) params.append('formaPagamento', formaPagamento);
+    
+    fetch(`/sistema/financeiro/relatorio?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                exibirRelatorioDetalhado(data.data);
+            } else {
+                console.error('Erro ao buscar relatório:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+}
+
+function exibirRelatorioDetalhado(data) {
+    const content = document.getElementById('relatorioContent');
+    
+    let html = `
+        <div style="margin-bottom: 20px;">
+            <h4>Resumo do Período</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: bold; color: #2563eb;">${data.pagination.totalItems}</div>
+                    <div style="color: #6b7280;">Total de Registros</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Paciente</th>
+                        <th>CPF</th>
+                        <th>Procedimento</th>
+                        <th>Profissional</th>
+                        <th>Forma Pagamento</th>
+                        <th>Status</th>
+                        <th>Valor</th>
+                        <th>Confirmado por</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.pagamentos.forEach(pagamento => {
+        html += `
+            <tr>
+                <td>${pagamento.data_pagamento ? new Date(pagamento.data_pagamento).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                <td>${pagamento.paciente?.nome || 'N/A'}</td>
+                <td>${pagamento.paciente?.cpf || 'N/A'}</td>
+                <td>${pagamento.agendamento?.produto?.nome || 'Procedimento'}</td>
+                <td>${pagamento.agendamento?.profissional?.nome || 'N/A'}</td>
+                <td>${formatarFormaPagamento(pagamento.forma_pagamento)}</td>
+                <td><span class="status-${pagamento.status}">${formatarStatus(pagamento.status)}</span></td>
+                <td>${formatarMoeda(pagamento.valor_final)}</td>
+                <td>${pagamento.confirmador?.nome || 'N/A'}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
+
+function confirmarPagamentoPendente(agendamentoId) {
+    if (confirm('Confirmar o pagamento deste procedimento?')) {
+        fetch(`/sistema/agendamentos/${agendamentoId}/pagamento`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                metodo_pagamento: 'dinheiro'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Pagamento confirmado com sucesso!');
+                carregarDashboard();
+            } else {
+                alert('Erro ao confirmar pagamento: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao confirmar pagamento');
+        });
+    }
+}
+
+// Funções utilitárias
+function formatarMoeda(valor) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(valor || 0);
+}
+
+// Função formatarFormaPagamento removida - não mais necessária
+
+function formatarStatus(status) {
+    const statuses = {
+        'pago': 'Pago',
+        'pendente': 'Pendente',
+        'cancelado': 'Cancelado',
+        'estornado': 'Estornado'
+    };
+    return statuses[status] || status;
+}
+</script>
+
+<style>
+/* Header Financeiro */
+.financeiro-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.financeiro-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.financeiro-title i {
+    color: #2563eb;
+}
+
+/* Seção de Gráficos */
+.charts-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.chart-main {
+    min-height: 280px;
+}
+
+.chart-secondary {
+    min-height: 280px;
+}
+
+/* Ajustes de Espaçamento */
+.filters-section {
+    margin-bottom: 30px;
+}
+
+.financial-section {
+    margin-bottom: 30px;
+}
+
+.financial-card {
+    margin-bottom: 30px;
+}
+
+.status-pago {
+    background: #dcfce7;
+    color: #166534;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-pendente {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-cancelado {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-estornado {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.table-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.btn-small {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+</style>
+
+<script src="/js/menuMobile.js"></script>
