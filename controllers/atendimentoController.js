@@ -226,34 +226,65 @@ class AtendimentoController {
     // Salvar foto
     static async salvarFoto(req, res) {
         try {
-            const { paciente_id, titulo, descricao, procedimento, momento, imagem_base64 } = req.body;
+            const { paciente_id, titulo, descricao, procedimento_id, momento_procedimento, imagem_base64 } = req.body;
             
-            // Criar diretório se não existir
-            const uploadDir = path.join(__dirname, '../public/uploads/fotos');
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
+            console.log('Salvando foto:', { paciente_id, titulo, procedimento_id, momento_procedimento });
+            
+            // Validar dados obrigatórios
+            if (!paciente_id || !titulo || !momento_procedimento || !imagem_base64) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Dados obrigatórios não fornecidos' 
+                });
             }
             
-            // Gerar nome único para o arquivo
-            const fileName = `foto_${paciente_id}_${Date.now()}.jpg`;
-            const filePath = path.join(uploadDir, fileName);
+            // Extrair tipo de arquivo da string base64
+            let tipoArquivo = 'jpg';
+            let base64Data = imagem_base64;
             
-            // Converter base64 para arquivo
-            const base64Data = imagem_base64.replace(/^data:image\/jpeg;base64,/, '');
-            fs.writeFileSync(filePath, base64Data, 'base64');
+            if (imagem_base64.startsWith('data:image/')) {
+                const matches = imagem_base64.match(/data:image\/(\w+);base64,(.*)/);
+                if (matches) {
+                    tipoArquivo = matches[1];
+                    base64Data = matches[2];
+                }
+            }
             
-            // Salvar no banco
+            // Converter base64 para buffer
+            const fotoBuffer = Buffer.from(base64Data, 'base64');
+            const tamanhoArquivo = fotoBuffer.length;
+            
+            console.log('Dados da foto:', { tipoArquivo, tamanhoArquivo });
+            
+            // Salvar no banco como BLOB
             const foto = await FotoPaciente.create({
                 paciente_id,
+                procedimento_id,
                 titulo,
                 descricao,
-                procedimento,
-                momento,
-                caminho_arquivo: `/uploads/fotos/${fileName}`,
+                momento_procedimento,
+                foto: fotoBuffer,
+                tipo_arquivo: tipoArquivo,
+                tamanho_arquivo: tamanhoArquivo,
                 data_foto: new Date()
             });
             
-            res.json({ success: true, data: foto });
+            console.log('Foto salva com sucesso:', foto.id);
+            
+            // Retornar dados sem o BLOB para economizar bandwidth
+            const fotoResponse = {
+                id: foto.id,
+                paciente_id: foto.paciente_id,
+                procedimento_id: foto.procedimento_id,
+                titulo: foto.titulo,
+                descricao: foto.descricao,
+                momento_procedimento: foto.momento_procedimento,
+                tipo_arquivo: foto.tipo_arquivo,
+                tamanho_arquivo: foto.tamanho_arquivo,
+                data_foto: foto.data_foto
+            };
+            
+            res.json({ success: true, data: fotoResponse });
         } catch (error) {
             console.error('Erro ao salvar foto:', error);
             res.status(500).json({ success: false, message: 'Erro ao salvar foto' });
@@ -270,7 +301,32 @@ class AtendimentoController {
                 order: [['data_foto', 'DESC']]
             });
             
-            res.json({ success: true, data: fotos });
+            // Converter BLOBs para base64
+            const fotosComBase64 = fotos.map(foto => {
+                const fotoData = {
+                    id: foto.id,
+                    paciente_id: foto.paciente_id,
+                    procedimento_id: foto.procedimento_id,
+                    titulo: foto.titulo,
+                    descricao: foto.descricao,
+                    momento_procedimento: foto.momento_procedimento,
+                    tipo_arquivo: foto.tipo_arquivo,
+                    tamanho_arquivo: foto.tamanho_arquivo,
+                    data_foto: foto.data_foto,
+                    criado_em: foto.criado_em,
+                    atualizado_em: foto.atualizado_em
+                };
+                
+                // Converter BLOB para base64
+                if (foto.foto) {
+                    const base64 = foto.foto.toString('base64');
+                    fotoData.imagem_base64 = `data:image/${foto.tipo_arquivo};base64,${base64}`;
+                }
+                
+                return fotoData;
+            });
+            
+            res.json({ success: true, data: fotosComBase64 });
         } catch (error) {
             console.error('Erro ao buscar fotos:', error);
             res.status(500).json({ success: false, message: 'Erro ao buscar fotos' });

@@ -844,14 +844,28 @@ function cancelarFoto() {
 }
 
 function salvarFoto() {
+    const titulo = document.getElementById('photoTitle').value;
+    const descricao = document.getElementById('photoDescription').value;
+    const procedimento_id = document.getElementById('photoProcedure').value;
+    const momento_procedimento = document.getElementById('photoMoment').value;
+    const imagem_base64 = document.getElementById('photoPreview').src;
+    
+    // Validar campos obrigatórios
+    if (!titulo || !momento_procedimento || !imagem_base64) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
+    }
+    
     const foto = {
         paciente_id: currentPatientId,
-        titulo: document.getElementById('photoTitle').value,
-        descricao: document.getElementById('photoDescription').value,
-        procedimento: document.getElementById('photoProcedure').value,
-        momento: document.getElementById('photoMoment').value,
-        imagem_base64: document.getElementById('photoPreview').src
+        titulo: titulo,
+        descricao: descricao,
+        procedimento_id: procedimento_id ? parseInt(procedimento_id) : null,
+        momento_procedimento: momento_procedimento,
+        imagem_base64: imagem_base64
     };
+    
+    console.log('Enviando foto:', foto);
     
     fetch('/sistema/atendimento/foto', {
         method: 'POST',
@@ -862,6 +876,7 @@ function salvarFoto() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Resposta do servidor:', data);
         if (data.success) {
             alert('Foto salva com sucesso!');
             cancelarFoto();
@@ -1491,20 +1506,48 @@ function exibirFotos(fotos) {
     const galeria = document.getElementById('photosGallery');
     galeria.innerHTML = '';
     
+    console.log('Exibindo fotos:', fotos);
+    
+    if (fotos.length === 0) {
+        galeria.innerHTML = '<p class="no-photos">Nenhuma foto encontrada.</p>';
+        return;
+    }
+    
     fotos.forEach(foto => {
         const div = document.createElement('div');
         div.className = 'photo-card';
+        
+        // Usar imagem_base64 se disponível, senão usar placeholder
+        const imagemSrc = foto.imagem_base64 || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbSBuw6NvIGRpc3BvbsOtdmVsPC90ZXh0Pjwvc3ZnPg==';
+        
         div.innerHTML = `
-            <img src="${foto.caminho_arquivo}" alt="${foto.titulo}">
+            <img src="${imagemSrc}" alt="${foto.titulo}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm8gYW8gY2FycmVnYXI8L3RleHQ+PC9zdmc+'">
             <div class="photo-info">
                 <h5>${foto.titulo}</h5>
-                <p>${foto.descricao}</p>
-                <p><strong>Momento:</strong> ${foto.momento}</p>
+                <p>${foto.descricao || 'Sem descrição'}</p>
+                <p><strong>Momento:</strong> ${getTextoMomento(foto.momento_procedimento)}</p>
                 <p><strong>Data:</strong> ${new Date(foto.data_foto).toLocaleDateString('pt-BR')}</p>
+                <p><strong>Tamanho:</strong> ${formatarTamanho(foto.tamanho_arquivo)}</p>
             </div>
         `;
         galeria.appendChild(div);
     });
+}
+
+function getTextoMomento(momento) {
+    const momentos = {
+        'antes': 'Antes do procedimento',
+        'durante': 'Durante o procedimento',
+        'depois': 'Depois do procedimento'
+    };
+    return momentos[momento] || momento;
+}
+
+function formatarTamanho(bytes) {
+    if (!bytes) return 'N/A';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 }
 
 function exibirExames(exames) {
