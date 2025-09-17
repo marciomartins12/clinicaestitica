@@ -110,6 +110,7 @@ router.post('/atendimento/exame', authController.isLoggedIn, AtendimentoControll
 router.get('/atendimento/exames/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarExames);
 router.put('/atendimento/exame/status', authController.isLoggedIn, AtendimentoController.atualizarStatusExame);
 router.put('/atendimento/exame/resultado', authController.isLoggedIn, AtendimentoController.salvarResultadosExame);
+router.delete('/atendimento/exame/:exameId', authController.isLoggedIn, AtendimentoController.apagarExame);
 router.post('/atendimento/foto', authController.isLoggedIn, AtendimentoController.salvarFoto);
 router.get('/atendimento/fotos/:pacienteId', authController.isLoggedIn, AtendimentoController.buscarFotos);
 router.post('/atendimento/prescricao', authController.isLoggedIn, AtendimentoController.salvarPrescricao);

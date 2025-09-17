@@ -203,6 +203,26 @@ class AtendimentoController {
         }
     }
     
+    // Apagar exame
+    static async apagarExame(req, res) {
+        try {
+            const { exameId } = req.params;
+            
+            const exame = await Exame.findByPk(exameId);
+            if (!exame) {
+                return res.status(404).json({ success: false, message: 'Exame não encontrado' });
+            }
+            
+            // Os resultados serão apagados automaticamente devido ao CASCADE
+            await exame.destroy();
+            
+            res.json({ success: true, message: 'Exame apagado com sucesso' });
+        } catch (error) {
+            console.error('Erro ao apagar exame:', error);
+            res.status(500).json({ success: false, message: 'Erro ao apagar exame' });
+        }
+    }
+    
     // Salvar foto
     static async salvarFoto(req, res) {
         try {

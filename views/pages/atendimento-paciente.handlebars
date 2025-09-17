@@ -75,10 +75,6 @@
                     <i class="fas fa-clipboard-list"></i>
                     Anamnese
                 </button>
-                <button class="tab-btn" onclick="openTab(event, 'atestado')">
-                    <i class="fas fa-file-medical"></i>
-                    Atestado
-                </button>
                 <button class="tab-btn" onclick="openTab(event, 'exames')">
                     <i class="fas fa-vial"></i>
                     Exames
@@ -90,6 +86,10 @@
                 <button class="tab-btn" onclick="openTab(event, 'historico')">
                     <i class="fas fa-history"></i>
                     Histórico
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'atestado')">
+                    <i class="fas fa-file-medical"></i>
+                    Atestado
                 </button>
                 <button class="tab-btn" onclick="openTab(event, 'prescricao')">
                     <i class="fas fa-prescription"></i>
@@ -1339,6 +1339,33 @@ function iniciarExame(exameId) {
     });
 }
 
+function apagarExame(exameId, nomeExame) {
+    if (confirm(`Tem certeza que deseja apagar o exame "${nomeExame}"?\n\nEsta ação não pode ser desfeita e todos os resultados serão perdidos.`)) {
+        console.log('Apagando exame ID:', exameId);
+        
+        fetch(`/sistema/atendimento/exame/${exameId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Resposta do servidor:', data);
+            if (data.success) {
+                alert('Exame apagado com sucesso!');
+                carregarExames();
+            } else {
+                alert('Erro ao apagar exame: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao apagar exame');
+        });
+    }
+}
+
 // History functions
 function filtrarHistorico() {
     const dataInicio = document.getElementById('dataInicio').value;
@@ -1546,6 +1573,9 @@ function criarCardExame(exame) {
                 <button class="btn-small btn-resultado" onclick="iniciarExame(${exame.id})">
                     <i class="fas fa-play"></i> Iniciar
                 </button>
+                <button class="btn-small btn-danger" onclick="apagarExame(${exame.id}, '${exame.tipo_exame}')">
+                    <i class="fas fa-trash"></i> Apagar
+                </button>
             </div>
         `;
     } else if (exame.status === 'em_andamento') {
@@ -1553,6 +1583,9 @@ function criarCardExame(exame) {
             <div class="exame-actions">
                 <button class="btn-small btn-concluir" onclick="abrirModalResultados(${exame.id}, '${exame.tipo_exame}', '${exame.data_exame}')">
                     <i class="fas fa-plus"></i> Adicionar Resultados
+                </button>
+                <button class="btn-small btn-danger" onclick="apagarExame(${exame.id}, '${exame.tipo_exame}')">
+                    <i class="fas fa-trash"></i> Apagar
                 </button>
             </div>
         `;

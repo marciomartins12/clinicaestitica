@@ -910,6 +910,19 @@
     background: #5a6268;
 }
 
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
 /* Resultados Modal Styles */
 .exame-info {
     background: #f8f9fa;
