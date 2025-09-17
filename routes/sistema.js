@@ -83,7 +83,13 @@ router.get('/profissionais', authController.isLoggedIn, AgendamentoController.bu
 // Rota para página de produtos
 router.get('/produtos', authController.isLoggedIn, async (req, res) => {
     try {
-        const user = req.session.user;
+        const user = await Usuario.findByPk(req.session.user.id);
+        
+        // Verificar se o usuário não é recepcionista
+        if (user.tipo_usuario === 'recepcionista') {
+            console.log(`Acesso negado à página Produtos para recepcionista ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
         
         // Buscar dados da clínica
         const clinica = await Clinica.findOne();
@@ -94,7 +100,216 @@ router.get('/produtos', authController.isLoggedIn, async (req, res) => {
         });
     } catch (error) {
         console.error('Erro ao carregar página de produtos:', error);
-        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+        res.redirect('/sistema/dashboard');
+    }
+});
+
+// Rota para renderizar a página Minha Clínica
+router.get('/minha-clinica', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = await Usuario.findByPk(req.session.user.id);
+        
+        if (!user) {
+            console.error('Usuário não encontrado na sessão:', req.session.user.id);
+            return res.redirect('/sistema/dashboard');
+        }
+        
+        // Verificar se o usuário é administrador
+        if (user.tipo_usuario !== 'admin') {
+            console.log(`Acesso negado à página Minha Clínica para usuário ${user.nome} (${user.tipo_usuario})`);
+            return res.redirect('/sistema/dashboard');
+        }
+        
+        // Buscar a clínica principal (ID 1)
+        const clinica = await Clinica.findByPk(1);
+        
+        if (!clinica) {
+            console.error('Clínica principal não encontrada');
+            return res.redirect('/sistema/dashboard');
+        }
+        
+        res.render('pages/minha-clinica', {
+            user: user,
+            clinica: clinica
+        });
+    } catch (error) {
+        console.error('Erro ao carregar página Minha Clínica:', error);
+        res.redirect('/sistema/dashboard');
+    }
+});
+
+// APIs para usuários
+router.get('/usuarios/api', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { Usuario } = require('../models');
+        
+        const usuarios = await Usuario.findAll({
+            where: {
+                id: { [require('sequelize').Op.ne]: req.session.user.id }, // Excluir o usuário atual
+                tipo_usuario: { [require('sequelize').Op.in]: ['profissional', 'recepcionista'] }
+            },
+            attributes: ['id', 'nome', 'email', 'cpf', 'rg', 'telefone', 'data_nascimento', 'endereco', 'tipo_usuario', 'data_admissao', 'salario', 'horario_trabalho', 'especialidade', 'registro', 'formacao', 'certificacoes', 'experiencia', 'setor', 'habilidades'],
+            order: [['nome', 'ASC']]
+        });
+        
+        res.json({
+            success: true,
+            data: usuarios
+        });
+        
+    } catch (error) {
+        console.error('Erro ao buscar usuários:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar usuários'
+        });
+    }
+});
+
+router.post('/usuarios/api', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { Usuario } = require('../models');
+        const bcrypt = require('bcrypt');
+        
+        const { nome, email, cpf, rg, telefone, data_nascimento, endereco, senha, tipo_usuario, data_admissao, salario, horario_trabalho, especialidade, registro, formacao, certificacoes, experiencia, setor, habilidades } = req.body;
+        
+        // Validações
+        if (!nome || !email || !senha || !tipo_usuario) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nome, email, senha e tipo de usuário são obrigatórios'
+            });
+        }
+        
+        // Verificar se email já existe
+        const emailExistente = await Usuario.findOne({ where: { email } });
+        if (emailExistente) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email já está em uso'
+            });
+        }
+        
+        // Verificar se CPF já existe (se fornecido)
+        if (cpf) {
+            const cpfExistente = await Usuario.findOne({ where: { cpf } });
+            if (cpfExistente) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'CPF já está em uso'
+                });
+            }
+        }
+        
+        // Criptografar senha
+        const senhaHash = await bcrypt.hash(senha, 10);
+        
+        const novoUsuario = await Usuario.create({
+            nome,
+            email,
+            cpf,
+            rg,
+            telefone,
+            data_nascimento,
+            endereco,
+            senha: senhaHash,
+            tipo_usuario,
+            data_admissao,
+            salario,
+            horario_trabalho,
+            especialidade,
+            registro,
+            formacao,
+            certificacoes,
+            experiencia,
+            setor,
+            habilidades
+        });
+        
+        // Remover senha da resposta
+        const { senha: _, ...usuarioSemSenha } = novoUsuario.toJSON();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Usuário criado com sucesso',
+            data: usuarioSemSenha
+        });
+        
+    } catch (error) {
+        console.error('Erro ao criar usuário:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao criar usuário'
+        });
+    }
+});
+
+router.delete('/usuarios/api/:id', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { Usuario } = require('../models');
+        const { id } = req.params;
+        
+        const usuario = await Usuario.findByPk(id);
+        
+        if (!usuario) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+        
+        // Não permitir excluir o próprio usuário
+        if (usuario.id === req.session.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Não é possível excluir seu próprio usuário'
+            });
+        }
+        
+        await usuario.destroy();
+        
+        res.json({
+            success: true,
+            message: 'Usuário excluído com sucesso'
+        });
+        
+    } catch (error) {
+        console.error('Erro ao excluir usuário:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao excluir usuário'
+        });
+    }
+});
+
+// APIs para clínica
+router.put('/clinica/api', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { Clinica } = require('../models');
+        const user = await Usuario.findByPk(req.session.userId);
+        
+        const clinica = await Clinica.findByPk(user.clinica_id);
+        if (!clinica) {
+            return res.status(404).json({
+                success: false,
+                message: 'Clínica não encontrada'
+            });
+        }
+        
+        await clinica.update(req.body);
+        
+        res.json({
+            success: true,
+            message: 'Configurações da clínica atualizadas com sucesso',
+            data: clinica
+        });
+        
+    } catch (error) {
+        console.error('Erro ao atualizar clínica:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao atualizar configurações da clínica'
+        });
     }
 });
 
@@ -151,7 +366,13 @@ router.post('/atendimento/finalizar/:pacienteId', authController.isLoggedIn, Ate
 // Rota para atendimento
 router.get('/atendimento', authController.isLoggedIn, async (req, res) => {
     try {
-        const user = req.session.user;
+        const user = await Usuario.findByPk(req.session.user.id);
+        
+        // Verificar se o usuário não é recepcionista
+        if (user.tipo_usuario === 'recepcionista') {
+            console.log(`Acesso negado à página Atendimento para recepcionista ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
         
         // Buscar dados da clínica
         const clinica = await Clinica.findOne();
@@ -175,8 +396,14 @@ router.get('/atendimento', authController.isLoggedIn, async (req, res) => {
 // Rota para atendimento específico do paciente
 router.get('/atendimento/:id', authController.isLoggedIn, async (req, res) => {
     try {
-        const user = req.session.user;
+        const user = await Usuario.findByPk(req.session.user.id);
         const pacienteId = req.params.id;
+        
+        // Verificar se o usuário não é recepcionista
+        if (user.tipo_usuario === 'recepcionista') {
+            console.log(`Acesso negado à página Atendimento do Paciente para recepcionista ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
         
         // Buscar dados da clínica
         const clinica = await Clinica.findOne();
