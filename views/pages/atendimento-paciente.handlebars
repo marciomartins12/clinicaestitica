@@ -2150,72 +2150,53 @@ function getStatusText(status) {
 </script>
 
 <style>
-/* Estilos Modernos para Anamnese */
+/* Estilos Simples para Anamnese */
 .anamnese-form-modern {
     padding: 20px;
-    background: #f8fafc;
-    border-radius: 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
     margin-top: 20px;
 }
 
 .anamnese-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
     max-width: 1200px;
     margin: 0 auto;
-}
-
-.anamnese-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.anamnese-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    border-color: #3b82f6;
 }
 
 .anamnese-card.full-width {
     grid-column: 1 / -1;
 }
 
+.anamnese-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
 .card-header {
+    padding: 15px 20px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 20px 20px 15px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-bottom: 1px solid #e2e8f0;
+    gap: 10px;
 }
 
 .card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    backdrop-filter: blur(10px);
-}
-
-.card-icon i {
-    font-size: 18px;
-    color: white;
+    color: #6b7280;
+    font-size: 16px;
 }
 
 .card-header h4 {
     margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    color: #374151;
 }
 
 .card-content {
@@ -2224,49 +2205,25 @@ function getStatusText(status) {
 
 .anamnese-textarea {
     width: 100%;
-    min-height: 120px;
-    padding: 15px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
     font-size: 14px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
+    font-family: inherit;
+    line-height: 1.5;
     resize: vertical;
-    transition: all 0.3s ease;
-    background: #fafbfc;
+    background: white;
 }
 
 .anamnese-textarea:focus {
     outline: none;
-    border-color: #3b82f6;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px #2563eb;
 }
 
 .anamnese-textarea::placeholder {
-    color: #94a3b8;
-    font-style: italic;
-}
-
-/* Cores específicas para cada card */
-.anamnese-card:nth-child(1) .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.anamnese-card:nth-child(2) .card-header {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.anamnese-card:nth-child(3) .card-header {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.anamnese-card:nth-child(4) .card-header {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.anamnese-card:nth-child(5) .card-header {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: #9ca3af;
 }
 
 /* Responsividade */
@@ -2281,7 +2238,7 @@ function getStatusText(status) {
     }
     
     .card-header {
-        padding: 15px;
+        padding: 12px 15px;
     }
     
     .card-content {
@@ -2289,73 +2246,9 @@ function getStatusText(status) {
     }
     
     .anamnese-textarea {
-        min-height: 100px;
-        padding: 12px;
+        min-height: 80px;
+        padding: 10px;
     }
-}
-
-@media (max-width: 480px) {
-    .card-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-    }
-    
-    .card-icon {
-        width: 35px;
-        height: 35px;
-    }
-    
-    .card-icon i {
-        font-size: 16px;
-    }
-    
-    .card-header h4 {
-        font-size: 14px;
-    }
-}
-
-/* Animações suaves */
-.anamnese-card {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-.anamnese-card:nth-child(1) { animation-delay: 0.1s; }
-.anamnese-card:nth-child(2) { animation-delay: 0.2s; }
-.anamnese-card:nth-child(3) { animation-delay: 0.3s; }
-.anamnese-card:nth-child(4) { animation-delay: 0.4s; }
-.anamnese-card:nth-child(5) { animation-delay: 0.5s; }
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Estados de foco melhorados */
-.anamnese-textarea:focus {
-    transform: scale(1.02);
-}
-
-/* Indicador de preenchimento */
-.anamnese-textarea:not(:placeholder-shown) {
-    border-color: #10b981;
-    background: #f0fdf4;
-}
-
-.anamnese-textarea:not(:placeholder-shown) + .card-header::after {
-    content: '✓';
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    color: #10b981;
-    font-weight: bold;
-    font-size: 18px;
 }
 </style>
 

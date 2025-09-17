@@ -79,8 +79,27 @@ router.post('/agendamentos/:id/pagamento', authController.isLoggedIn, Agendament
 router.delete('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.excluirAgendamento);
 router.get('/pacientes/buscar', authController.isLoggedIn, AgendamentoController.buscarPacientes);
 router.get('/profissionais', authController.isLoggedIn, AgendamentoController.buscarProfissionais);
+// Rota para página de produtos
+router.get('/produtos', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = req.session.user;
+        
+        // Buscar dados da clínica
+        const clinica = await Clinica.findOne();
+        
+        res.render('pages/produto', {
+            user: user,
+            clinica: clinica || { nome: 'Clínica' }
+        });
+    } catch (error) {
+        console.error('Erro ao carregar página de produtos:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// APIs para produtos
 router.get('/produtos/procedimentos', authController.isLoggedIn, AgendamentoController.buscarProdutos);
-router.get('/produtos', authController.isLoggedIn, AgendamentoController.buscarTodosProdutos);
+router.get('/produtos/api', authController.isLoggedIn, AgendamentoController.buscarTodosProdutos);
 
 // Rotas para recados
 router.post('/recados', authController.isLoggedIn, RecadoController.criarRecado);

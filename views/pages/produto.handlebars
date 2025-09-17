@@ -1,0 +1,721 @@
+
+<!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h2><i class="fas fa-spa"></i> {{clinica.nome}}</h2>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="/sistema/dashboard" class="nav-link"><i class="fas fa-home"></i>Inicio</a></li>
+                <li class="nav-item"><a href="/sistema/agenda" class="nav-link"><i class="fas fa-calendar-alt"></i>Agenda</a></li>
+                <li class="nav-item"><a href="/sistema/pacientes" class="nav-link"><i class="fas fa-users"></i>Pacientes</a></li>
+                <li class="nav-item"><a href="/sistema/atendimento" class="nav-link"><i class="fas fa-user-md"></i>Atendimentos</a></li>
+                <li class="nav-item"><a href="/sistema/financeiro" class="nav-link"><i class="fas fa-dollar-sign"></i>Financeiro</a></li>
+                <li class="nav-item"><a href="/sistema/produtos" class="nav-link active"><i class="fas fa-box"></i>Produtos</a></li>
+                <li class="nav-item"><a href="/sistema/minhaClinica" class="nav-link"><i class="fas fa-clinic-medical"></i>Minha Clínica</a></li>
+            </ul>
+
+            <!-- User Section -->
+            <div class="sidebar-user">
+                <div class="user-profile">
+                    <div><i class="fa-solid fa-user"></i></div>
+                    <div class="user-details">
+                        <div class="user-name-sidebar">{{user.nome}}</div>
+                        <div class="user-role">{{user.tipo_usuario}}</div>
+                    </div>
+                </div>
+                <a href="/sistema/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sair
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-box"></i>
+                    Produtos e Serviços
+                </h1>
+            </div>
+
+            <!-- Abas de Categorias -->
+            <div class="products-tabs">
+                <div class="tab-buttons">
+                    <div class="tab-btn active" onclick="switchTab('procedures')">
+                        <i class="fas fa-user-md"></i>
+                        Procedimentos
+                    </div>
+                    <div class="tab-btn" onclick="switchTab('medications')">
+                        <i class="fas fa-pills"></i>
+                        Medicamentos
+                    </div>
+                    <div class="tab-btn" onclick="switchTab('supplements')">
+                        <i class="fas fa-capsules"></i>
+                        Suplementos
+                    </div>
+                    <div class="tab-btn" onclick="switchTab('combos')">
+                        <i class="fas fa-layer-group"></i>
+                        Combos
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-section">
+                <h5 style="margin-bottom: 15px; color: #1e293b;">
+                    <i class="fas fa-filter"></i>
+                    Filtros
+                </h5>
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label class="form-label">Buscar</label>
+                        <input type="text" id="searchInput" class="form-input" placeholder="Digite o nome do produto...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select id="categoryFilter" class="form-select">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Faixa de Preço</label>
+                        <select id="priceFilter" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="0-50">R$ 0 - R$ 50</option>
+                            <option value="50-100">R$ 50 - R$ 100</option>
+                            <option value="100-200">R$ 100 - R$ 200</option>
+                            <option value="200+">Acima de R$ 200</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-secondary" onclick="applyFilters()">
+                            <i class="fas fa-search"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo das Abas -->
+            
+            <!-- Procedimentos -->
+            <div id="procedures" class="tab-content active">
+                <div class="products-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h4 style="margin: 0; color: #1e293b;">
+                            <i class="fas fa-user-md"></i>
+                            Procedimentos
+                        </h4>
+                        <button class="new-product-btn" onclick="createNewProduct('procedure')">
+                            <i class="fas fa-plus"></i>
+                            Novo Procedimento
+                        </button>
+                    </div>
+                    
+                    <div id="proceduresContainer">
+                        <!-- Procedimentos serão carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicamentos -->
+            <div id="medications" class="tab-content">
+                <div class="products-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h4 style="margin: 0; color: #1e293b;">
+                            <i class="fas fa-pills"></i>
+                            Medicamentos
+                        </h4>
+                        <button class="new-product-btn" onclick="createNewProduct('medication')">
+                            <i class="fas fa-plus"></i>
+                            Novo Medicamento
+                        </button>
+                    </div>
+                    
+                    <div id="medicationsContainer">
+                        <!-- Medicamentos serão carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suplementos -->
+            <div id="supplements" class="tab-content">
+                <div class="products-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h4 style="margin: 0; color: #1e293b;">
+                            <i class="fas fa-capsules"></i>
+                            Suplementos
+                        </h4>
+                        <button class="new-product-btn" onclick="createNewProduct('supplement')">
+                            <i class="fas fa-plus"></i>
+                            Novo Suplemento
+                        </button>
+                    </div>
+                    
+                    <div id="supplementsContainer">
+                        <!-- Suplementos serão carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Combos -->
+            <div id="combos" class="tab-content">
+                <div class="products-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h4 style="margin: 0; color: #1e293b;">
+                            <i class="fas fa-layer-group"></i>
+                            Combos
+                        </h4>
+                        <button class="new-product-btn" onclick="createNewProduct('combo')">
+                            <i class="fas fa-plus"></i>
+                            Novo Combo
+                        </button>
+                    </div>
+                    
+                    <div id="combosContainer">
+                        <!-- Combos serão carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado Vazio -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-box"></i>
+                <h4>Nenhum produto encontrado</h4>
+                <p>Não há produtos para os filtros selecionados</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/shared.js"></script>
+    <script>
+        // Dados simulados
+        let products = {
+            procedures: [
+                {
+                    id: 1,
+                    name: 'Limpeza Facial Profunda',
+                    category: 'Facial',
+                    price: 120.00,
+                    duration: 90,
+                    description: 'Limpeza facial completa com extração de comedões, esfoliação e máscara hidratante.',
+                    materials: 'Sabonete facial, tônico, esfoliante, máscara',
+                    contraindications: 'Pele com feridas abertas, inflamações ativas'
+                },
+                {
+                    id: 2,
+                    name: 'Microagulhamento',
+                    category: 'Rejuvenescimento',
+                    price: 200.00,
+                    duration: 60,
+                    description: 'Procedimento de microagulhamento para estimular a produção de colágeno.',
+                    materials: 'Dermapen, soro vitamina C, anestésico tópico',
+                    contraindications: 'Gravidez, pele sensível, uso de ácidos'
+                },
+                {
+                    id: 3,
+                    name: 'Botox',
+                    category: 'Rejuvenescimento',
+                    price: 300.00,
+                    duration: 30,
+                    description: 'Aplicação de toxina botulínica para redução de rugas de expressão.',
+                    materials: 'Toxina botulínica, seringas, agulhas',
+                    contraindications: 'Gravidez, amamentação, doenças neuromusculares'
+                }
+            ],
+            medications: [
+                {
+                    id: 1,
+                    name: 'Ácido Hialurônico',
+                    category: 'Hidratante',
+                    concentration: '2%',
+                    form: 'Sérum',
+                    usage: 'Aplicar 2 gotas no rosto limpo, 2x ao dia',
+                    description: 'Sérum hidratante com ácido hialurônico para hidratação profunda da pele.',
+                    contraindications: 'Alergia conhecida ao componente'
+                },
+                {
+                    id: 2,
+                    name: 'Tretinoína',
+                    category: 'Antienvelhecimento',
+                    concentration: '0.05%',
+                    form: 'Creme',
+                    usage: 'Aplicar à noite, 3x por semana inicialmente',
+                    description: 'Creme com tretinoína para renovação celular e combate ao envelhecimento.',
+                    contraindications: 'Gravidez, amamentação, pele muito sensível'
+                },
+                {
+                    id: 3,
+                    name: 'Hidroquinona',
+                    category: 'Clareador',
+                    concentration: '4%',
+                    form: 'Gel',
+                    usage: 'Aplicar apenas nas manchas, à noite',
+                    description: 'Gel clareador para tratamento de melasma e manchas escuras.',
+                    contraindications: 'Exposição solar, gravidez'
+                }
+            ],
+            supplements: [
+                {
+                    id: 1,
+                    name: 'Colágeno Hidrolisado',
+                    category: 'Beleza',
+                    price: 85.00,
+                    form: 'Pó',
+                    dosage: '10g',
+                    usage: 'Dissolver 1 medida em água, 1x ao dia',
+                    description: 'Suplemento de colágeno para melhora da elasticidade da pele.',
+                    benefits: 'Melhora elasticidade, reduz rugas, fortalece unhas'
+                },
+                {
+                    id: 2,
+                    name: 'Vitamina C + Zinco',
+                    category: 'Antioxidante',
+                    price: 45.00,
+                    form: 'Cápsula',
+                    dosage: '500mg + 10mg',
+                    usage: '1 cápsula ao dia, preferencialmente pela manhã',
+                    description: 'Suplemento antioxidante para proteção celular e imunidade.',
+                    benefits: 'Antioxidante, melhora imunidade, protege contra radicais livres'
+                },
+                {
+                    id: 3,
+                    name: 'Ômega 3',
+                    category: 'Saúde Geral',
+                    price: 65.00,
+                    form: 'Cápsula',
+                    dosage: '1000mg',
+                    usage: '1 cápsula 2x ao dia, após as refeições',
+                    description: 'Suplemento de ácidos graxos essenciais para saúde cardiovascular.',
+                    benefits: 'Saúde cardiovascular, anti-inflamatório, melhora cognitiva'
+                }
+            ],
+            combos: [
+                {
+                    id: 1,
+                    name: 'Combo Rejuvenescimento Completo',
+                    items: [
+                        { name: 'Limpeza Facial Profunda', price: 120.00 },
+                        { name: 'Microagulhamento', price: 200.00 },
+                        { name: 'Colágeno Hidrolisado', price: 85.00 }
+                    ],
+                    originalPrice: 405.00,
+                    discountPercent: 15,
+                    finalPrice: 344.25,
+                    description: 'Combo completo para rejuvenescimento facial com procedimentos e suplementação.',
+                    duration: '3 sessões ao longo de 2 meses',
+                    benefits: 'Renovação celular, estímulo de colágeno, hidratação profunda'
+                },
+                {
+                    id: 2,
+                    name: 'Combo Pele Perfeita',
+                    items: [
+                        { name: 'Limpeza Facial Profunda', price: 120.00 },
+                        { name: 'Vitamina C + Zinco', price: 45.00 }
+                    ],
+                    originalPrice: 165.00,
+                    discountPercent: 10,
+                    finalPrice: 148.50,
+                    description: 'Combo para limpeza e proteção da pele com suplementação antioxidante.',
+                    duration: '1 sessão + 1 mês de suplementação',
+                    benefits: 'Limpeza profunda, proteção antioxidante, prevenção do envelhecimento'
+                }
+            ]
+        };
+
+        let currentTab = 'procedures';
+        let filteredProducts = {};
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFilters();
+            filterProducts();
+            renderProducts();
+        });
+
+        // Inicializar filtros
+        function initializeFilters() {
+            // Busca em tempo real
+            new SearchFilter({
+                searchInputId: 'searchInput',
+                filterSelects: ['categoryFilter', 'priceFilter'],
+                onSearch: filterProducts,
+                debounceTime: 300
+            });
+
+            // Atualizar opções de categoria baseado na aba ativa
+            updateCategoryFilter();
+        }
+
+        // Atualizar filtro de categoria
+        function updateCategoryFilter() {
+            const categoryFilter = document.getElementById('categoryFilter');
+            const categories = new Set();
+            
+            products[currentTab].forEach(product => {
+                if (product.category) {
+                    categories.add(product.category);
+                }
+            });
+            
+            categoryFilter.innerHTML = '<option value="">Todas</option>';
+            categories.forEach(category => {
+                categoryFilter.innerHTML += `<option value="${category}">${category}</option>`;
+            });
+        }
+
+        // Trocar aba
+        function switchTab(tabName) {
+            // Atualizar botões
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.tab-btn').classList.add('active');
+            
+            // Atualizar conteúdo
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            
+            currentTab = tabName;
+            updateCategoryFilter();
+            filterProducts();
+            renderProducts();
+        }
+
+        // Filtrar produtos
+        function filterProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const priceRange = document.getElementById('priceFilter').value;
+            
+            filteredProducts[currentTab] = products[currentTab].filter(product => {
+                const matchesSearch = !searchTerm || 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    (product.description && product.description.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = !category || product.category === category;
+                
+                let matchesPrice = true;
+                if (priceRange && product.price !== undefined) {
+                    const price = product.finalPrice || product.price;
+                    if (priceRange === '0-50') matchesPrice = price <= 50;
+                    else if (priceRange === '50-100') matchesPrice = price > 50 && price <= 100;
+                    else if (priceRange === '100-200') matchesPrice = price > 100 && price <= 200;
+                    else if (priceRange === '200+') matchesPrice = price > 200;
+                }
+                
+                return matchesSearch && matchesCategory && matchesPrice;
+            });
+            
+            renderProducts();
+        }
+
+        // Renderizar produtos
+        function renderProducts() {
+            const container = document.getElementById(currentTab + 'Container');
+            const emptyState = document.getElementById('emptyState');
+            const currentProducts = filteredProducts[currentTab] || products[currentTab];
+            
+            if (currentProducts.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            container.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            container.innerHTML = currentProducts.map(product => {
+                switch(currentTab) {
+                    case 'procedures':
+                        return renderProcedure(product);
+                    case 'medications':
+                        return renderMedication(product);
+                    case 'supplements':
+                        return renderSupplement(product);
+                    case 'combos':
+                        return renderCombo(product);
+                    default:
+                        return '';
+                }
+            }).join('');
+        }
+
+        // Renderizar procedimento
+        function renderProcedure(procedure) {
+            return `
+                <div class="product-card procedure">
+                    <div class="product-header">
+                        <div>
+                            <div class="product-title">${procedure.name}</div>
+                            <div class="product-category">${procedure.category}</div>
+                        </div>
+                        <div class="product-price">${formatCurrency(procedure.price)}</div>
+                    </div>
+                    
+                    <div class="product-content">
+                        <div class="product-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span class="detail-label">Duração:</span>
+                                <span class="detail-value">${procedure.duration} min</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-tools"></i>
+                                <span class="detail-label">Materiais:</span>
+                                <span class="detail-value">${procedure.materials}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="product-description">
+                            <p><strong>Descrição:</strong> ${procedure.description}</p>
+                            <p><strong>Contraindicações:</strong> ${procedure.contraindications}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <button class="product-btn edit" onclick="editProduct('procedure', ${procedure.id})">
+                            <i class="fas fa-edit"></i>
+                            Editar
+                        </button>
+                        <button class="product-btn delete" onclick="deleteProduct('procedure', ${procedure.id})">
+                            <i class="fas fa-trash"></i>
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizar medicamento
+        function renderMedication(medication) {
+            return `
+                <div class="product-card medication">
+                    <div class="product-header">
+                        <div>
+                            <div class="product-title">${medication.name}</div>
+                            <div class="product-category">${medication.category}</div>
+                        </div>
+                        <div class="product-price free">Sem Valor</div>
+                    </div>
+                    
+                    <div class="product-content">
+                        <div class="product-details">
+                            <div class="detail-item">
+                                <i class="fas fa-percentage"></i>
+                                <span class="detail-label">Concentração:</span>
+                                <span class="detail-value">${medication.concentration}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-pills"></i>
+                                <span class="detail-label">Forma:</span>
+                                <span class="detail-value">${medication.form}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-instructions"></i>
+                                <span class="detail-label">Uso:</span>
+                                <span class="detail-value">${medication.usage}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="product-description">
+                            <p><strong>Descrição:</strong> ${medication.description}</p>
+                            <p><strong>Contraindicações:</strong> ${medication.contraindications}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <button class="product-btn edit" onclick="editProduct('medication', ${medication.id})">
+                            <i class="fas fa-edit"></i>
+                            Editar
+                        </button>
+                        <button class="product-btn delete" onclick="deleteProduct('medication', ${medication.id})">
+                            <i class="fas fa-trash"></i>
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizar suplemento
+        function renderSupplement(supplement) {
+            return `
+                <div class="product-card supplement">
+                    <div class="product-header">
+                        <div>
+                            <div class="product-title">${supplement.name}</div>
+                            <div class="product-category">${supplement.category}</div>
+                        </div>
+                        <div class="product-price">${formatCurrency(supplement.price)}</div>
+                    </div>
+                    
+                    <div class="product-content">
+                        <div class="product-details">
+                            <div class="detail-item">
+                                <i class="fas fa-pills"></i>
+                                <span class="detail-label">Forma:</span>
+                                <span class="detail-value">${supplement.form}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-weight"></i>
+                                <span class="detail-label">Dosagem:</span>
+                                <span class="detail-value">${supplement.dosage}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-instructions"></i>
+                                <span class="detail-label">Uso:</span>
+                                <span class="detail-value">${supplement.usage}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="product-description">
+                            <p><strong>Descrição:</strong> ${supplement.description}</p>
+                            <p><strong>Benefícios:</strong> ${supplement.benefits}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <button class="product-btn edit" onclick="editProduct('supplement', ${supplement.id})">
+                            <i class="fas fa-edit"></i>
+                            Editar
+                        </button>
+                        <button class="product-btn delete" onclick="deleteProduct('supplement', ${supplement.id})">
+                            <i class="fas fa-trash"></i>
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizar combo
+        function renderCombo(combo) {
+            return `
+                <div class="product-card combo">
+                    <div class="product-header">
+                        <div>
+                            <div class="product-title">${combo.name}</div>
+                            <div class="product-category">Combo</div>
+                        </div>
+                        <div>
+                            <div style="text-decoration: line-through; color: #6b7280; font-size: 14px;">
+                                ${formatCurrency(combo.originalPrice)}
+                            </div>
+                            <div class="product-price">
+                                ${formatCurrency(combo.finalPrice)}
+                                <span class="discount-badge">-${combo.discountPercent}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-content">
+                        <div class="combo-items">
+                            <h6 style="margin-bottom: 10px; color: #1e293b;">Itens inclusos:</h6>
+                            ${combo.items.map(item => `
+                                <div class="combo-item">
+                                    <span class="combo-item-name">${item.name}</span>
+                                    <span class="combo-item-price">${formatCurrency(item.price)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="product-details">
+                            <div class="detail-item">
+                                <i class="fas fa-calendar"></i>
+                                <span class="detail-label">Duração:</span>
+                                <span class="detail-value">${combo.duration}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-percentage"></i>
+                                <span class="detail-label">Desconto:</span>
+                                <span class="detail-value">${combo.discountPercent}%</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-piggy-bank"></i>
+                                <span class="detail-label">Economia:</span>
+                                <span class="detail-value">${formatCurrency(combo.originalPrice - combo.finalPrice)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="product-description">
+                            <p><strong>Descrição:</strong> ${combo.description}</p>
+                            <p><strong>Benefícios:</strong> ${combo.benefits}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <button class="product-btn edit" onclick="editProduct('combo', ${combo.id})">
+                            <i class="fas fa-edit"></i>
+                            Editar
+                        </button>
+                        <button class="product-btn delete" onclick="deleteProduct('combo', ${combo.id})">
+                            <i class="fas fa-trash"></i>
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            filterProducts();
+        }
+
+        // Criar novo produto
+        function createNewProduct(type) {
+            Notification.info(`Funcionalidade de novo ${getTypeLabel(type)} em desenvolvimento`);
+        }
+
+        // Editar produto
+        function editProduct(type, id) {
+            const product = products[type + 's'].find(p => p.id === id);
+            if (product) {
+                Notification.info(`Editando ${getTypeLabel(type)}: ${product.name}`);
+            }
+        }
+
+        // Excluir produto
+        function deleteProduct(type, id) {
+            const product = products[type + 's'].find(p => p.id === id);
+            if (product && confirm(`Tem certeza que deseja excluir "${product.name}"?`)) {
+                const index = products[type + 's'].findIndex(p => p.id === id);
+                if (index !== -1) {
+                    products[type + 's'].splice(index, 1);
+                    filterProducts();
+                    Notification.success(`${getTypeLabel(type)} excluído com sucesso!`);
+                }
+            }
+        }
+
+        // Funções auxiliares
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function getTypeLabel(type) {
+            const labels = {
+                'procedure': 'procedimento',
+                'medication': 'medicamento',
+                'supplement': 'suplemento',
+                'combo': 'combo'
+            };
+            return labels[type] || type;
+        }
+    </script>
