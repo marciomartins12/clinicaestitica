@@ -171,6 +171,15 @@ router.post('/usuarios/api', authController.isLoggedIn, async (req, res) => {
         const { Usuario } = require('../models');
         const bcrypt = require('bcrypt');
         
+        // Verificar se o usuário atual é administrador
+        const currentUser = await Usuario.findByPk(req.session.user.id);
+        if (currentUser.tipo_usuario !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado. Apenas administradores podem criar usuários.'
+            });
+        }
+        
         const { nome, email, cpf, rg, telefone, data_nascimento, endereco, senha, tipo_usuario, data_admissao, salario, horario_trabalho, especialidade, registro, formacao, certificacoes, experiencia, setor, habilidades } = req.body;
         
         // Validações
@@ -178,6 +187,14 @@ router.post('/usuarios/api', authController.isLoggedIn, async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Nome, email, senha e tipo de usuário são obrigatórios'
+            });
+        }
+        
+        // Validar tipo de usuário
+        if (!['profissional', 'atendente', 'admin'].includes(tipo_usuario)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tipo de usuário inválido. Use: profissional, atendente ou admin'
             });
         }
         
@@ -244,6 +261,91 @@ router.post('/usuarios/api', authController.isLoggedIn, async (req, res) => {
     }
 });
 
+router.put('/usuarios/api/:id', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { Usuario } = require('../models');
+        const { id } = req.params;
+        const currentUser = await Usuario.findByPk(req.session.user.id);
+        
+        // Verificar se o usuário atual é administrador
+        if (currentUser.tipo_usuario !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado. Apenas administradores podem editar usuários.'
+            });
+        }
+        
+        const usuario = await Usuario.findByPk(id);
+        
+        if (!usuario) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+        
+        const { nome, email, cpf, rg, telefone, data_nascimento, endereco, data_admissao, salario, horario_trabalho, especialidade, registro, formacao, certificacoes, experiencia, setor, habilidades } = req.body;
+        
+        // Verificar se email já existe (exceto para o próprio usuário)
+        if (email && email !== usuario.email) {
+            const emailExistente = await Usuario.findOne({ where: { email } });
+            if (emailExistente) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email já está em uso por outro usuário'
+                });
+            }
+        }
+        
+        // Verificar se CPF já existe (exceto para o próprio usuário)
+        if (cpf && cpf !== usuario.cpf) {
+            const cpfExistente = await Usuario.findOne({ where: { cpf } });
+            if (cpfExistente) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'CPF já está em uso por outro usuário'
+                });
+            }
+        }
+        
+        await usuario.update({
+            nome,
+            email,
+            cpf,
+            rg,
+            telefone,
+            data_nascimento,
+            endereco,
+            data_admissao,
+            salario,
+            horario_trabalho,
+            especialidade,
+            registro,
+            formacao,
+            certificacoes,
+            experiencia,
+            setor,
+            habilidades
+        });
+        
+        // Remover senha da resposta
+        const { senha: _, ...usuarioAtualizado } = usuario.toJSON();
+        
+        res.json({
+            success: true,
+            message: 'Usuário atualizado com sucesso',
+            data: usuarioAtualizado
+        });
+        
+    } catch (error) {
+        console.error('Erro ao atualizar usuário:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao atualizar usuário'
+        });
+    }
+});
+
 router.delete('/usuarios/api/:id', authController.isLoggedIn, async (req, res) => {
     try {
         const { Usuario } = require('../models');
@@ -285,10 +387,19 @@ router.delete('/usuarios/api/:id', authController.isLoggedIn, async (req, res) =
 // APIs para clínica
 router.put('/clinica/api', authController.isLoggedIn, async (req, res) => {
     try {
-        const { Clinica } = require('../models');
-        const user = await Usuario.findByPk(req.session.userId);
+const { Clinica } = require('../models');
+        const user = await Usuario.findByPk(req.session.user.id);
         
-        const clinica = await Clinica.findByPk(user.clinica_id);
+        // Verificar se o usuário é administrador
+        if (user.tipo_usuario !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado. Apenas administradores podem atualizar dados da clínica.'
+            });
+        }
+        
+        // Buscar a clínica principal (ID 1)
+        const clinica = await Clinica.findByPk(1);
         if (!clinica) {
             return res.status(404).json({
                 success: false,
