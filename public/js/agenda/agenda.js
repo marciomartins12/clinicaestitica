@@ -840,7 +840,7 @@ function carregarProfissionais() {
 // Carregar todos os produtos
 function carregarTodosProdutos() {
     console.log('Carregando produtos...');
-    fetch('/sistema/produtos')
+    fetch('/sistema/produtos/todos')
         .then(response => response.json())
         .then(data => {
             console.log('Resposta da API:', data);
