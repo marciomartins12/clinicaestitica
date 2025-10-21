@@ -1,4 +1,4 @@
-const { Agendamento, Paciente, Usuario, Produto, ItemAgendamento, Pagamento } = require('../models');
+const { Agendamento, Paciente, Usuario, Produto, ItemAgendamento, Pagamento, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 class AgendamentoController {
@@ -36,6 +36,38 @@ class AgendamentoController {
                     [Op.between]: [startDate, endDate]
                 };
             }
+
+            // Regras de visibilidade na evolução: profissionais veem seus agendamentos e os sem profissional
+            const currentUser = req.session?.user;
+            if (req.originalUrl.includes('/atendimento/evolucao/') && currentUser && currentUser.tipo_usuario === 'profissional') {
+                whereClause[Op.or] = [
+                    { profissional_id: currentUser.id },
+                    { profissional_id: null }
+                ];
+            }
+            
+            // Filtro "minha agenda" (profissional): a partir de hoje, meus agendamentos e sem profissional
+            const minhaAgenda = req.query.minhaAgenda === 'true';
+            if (minhaAgenda && currentUser && currentUser.tipo_usuario === 'profissional') {
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                // Aplicar filtro de data a partir de hoje se não houver um intervalo explícito
+                whereClause.data_agendamento = {
+                    ...(whereClause.data_agendamento || {}),
+                    [Op.gte]: hoje
+                };
+                // Garantir que pegue meus e sem profissional
+                if (!whereClause[Op.or]) {
+                    whereClause[Op.or] = [
+                        { profissional_id: currentUser.id },
+                        { profissional_id: null }
+                    ];
+                }
+            }
+            
+            // Ocultar agendamentos finalizados com pagamento confirmado
+            const ocultarFinalizadoPago = sequelize.literal("NOT (Agendamento.status = 'finalizado' AND EXISTS (SELECT 1 FROM pagamentos p WHERE p.agendamento_id = Agendamento.id AND p.status = 'pago'))");
+            whereClause[Op.and] = whereClause[Op.and] ? [...whereClause[Op.and], ocultarFinalizadoPago] : [ocultarFinalizadoPago];
             
             // Configurar include com filtro de busca
             const includeOptions = [
@@ -188,7 +220,7 @@ class AgendamentoController {
         try {
             const {
                 paciente_id,
-                profissional_id,
+                profissional_id: profissionalIdRaw,
                 data_agendamento,
                 observacoes,
                 valor,
@@ -197,43 +229,62 @@ class AgendamentoController {
                 itens = []
             } = req.body;
             
+            // Normalizar profissional_id para permitir NULL (tratando 0 como NULL)
+            const profissional_id = (function normalizeProfissionalId(v) {
+                if (v === undefined || v === null) return null;
+                if (typeof v === 'string') {
+                    const t = v.trim().toLowerCase();
+                    if (t === '' || t === 'null' || t === 'undefined') return null;
+                    const n = Number(t);
+                    if (!Number.isFinite(n)) return null;
+                    return n === 0 ? null : n;
+                }
+                if (typeof v === 'number') {
+                    if (!Number.isFinite(v)) return null;
+                    return v === 0 ? null : v;
+                }
+                return null;
+            })(profissionalIdRaw);
+            
             // Validações básicas
-            if (!paciente_id || !profissional_id || !data_agendamento) {
+            if (!paciente_id || !data_agendamento) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Paciente, profissional e data são obrigatórios'
+                    message: 'Paciente e data são obrigatórios'
                 });
             }
             
-            // Verificar se o horário está disponível
-            const agendamentoExistente = await Agendamento.findOne({
-                where: {
-                    profissional_id,
-                    data_agendamento,
-                    status: {
-                        [Op.notIn]: ['cancelado', 'faltou']
+            // Verificar se o horário está disponível quando há profissional definido
+            if (profissional_id) {
+                const agendamentoExistente = await Agendamento.findOne({
+                    where: {
+                        profissional_id,
+                        data_agendamento,
+                        status: {
+                            [Op.notIn]: ['cancelado', 'faltou']
+                        }
                     }
-                }
-            });
-            
-            if (agendamentoExistente) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Já existe um agendamento para este profissional neste horário'
                 });
+                
+                if (agendamentoExistente) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Já existe um agendamento para este profissional neste horário'
+                    });
+                }
             }
             
             // Criar agendamento
             const novoAgendamento = await Agendamento.create({
                 paciente_id,
-                profissional_id,
+                profissional_id, // pode ser null
                 produto_id: null, // Não usamos mais produto_id único
                 data_agendamento,
                 observacoes,
                 valor: valor || null,
                 desconto,
                 valor_final,
-                status: 'agendado'
+                status: 'aguardando'
             });
             
             // Criar itens do agendamento se existirem
@@ -509,41 +560,78 @@ class AgendamentoController {
             }
             
             // Verificar se o novo horário está disponível (exceto para o próprio agendamento)
-            if (data_agendamento && (data_agendamento !== agendamento.data_agendamento || profissional_id !== agendamento.profissional_id)) {
-                const agendamentoExistente = await Agendamento.findOne({
-                    where: {
-                        profissional_id,
-                        data_agendamento,
-                        status: {
-                            [Op.notIn]: ['cancelado', 'faltou']
-                        },
-                        id: {
-                            [Op.ne]: id
+            // Normalizar profissional_id para permitir NULL (tratando 0 como NULL)
+            const profissionalIdNormalizado = (function normalizeProfissionalId(v) {
+                if (v === undefined || v === null) return null;
+                if (typeof v === 'string') {
+                    const t = v.trim().toLowerCase();
+                    if (t === '' || t === 'null' || t === 'undefined') return null;
+                    const n = Number(t);
+                    if (!Number.isFinite(n)) return null;
+                    return n === 0 ? null : n;
+                }
+                if (typeof v === 'number') {
+                    if (!Number.isFinite(v)) return null;
+                    return v === 0 ? null : v;
+                }
+                return null;
+            })(profissional_id);
+            
+            if (data_agendamento && (data_agendamento !== agendamento.data_agendamento || profissionalIdNormalizado !== agendamento.profissional_id)) {
+                if (profissionalIdNormalizado) {
+                    const agendamentoExistente = await Agendamento.findOne({
+                        where: {
+                            profissional_id: profissionalIdNormalizado,
+                            data_agendamento,
+                            status: {
+                                [Op.notIn]: ['cancelado', 'faltou']
+                            },
+                            id: {
+                                [Op.ne]: id
+                            }
                         }
-                    }
-                });
-                
-                if (agendamentoExistente) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Já existe um agendamento para este profissional neste horário'
                     });
+                    
+                    if (agendamentoExistente) {
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Já existe um agendamento para este profissional neste horário'
+                        });
+                    }
                 }
             }
             
             // Calcular valor final
             const valor_final = valor ? (parseFloat(valor) - parseFloat(desconto)) : agendamento.valor_final;
             
+            // Ajustar status automaticamente ao reagendar (mudar data/hora ou profissional)
+            let statusAtualizado = agendamento.status;
+            const mudouHorario = !!(data_agendamento && data_agendamento !== agendamento.data_agendamento);
+            const mudouProfissional = profissionalIdNormalizado !== agendamento.profissional_id;
+            if (mudouHorario || mudouProfissional) {
+                // Se não está cancelado ou faltou, volta para "aguardando"
+                if (!['cancelado', 'faltou'].includes(statusAtualizado)) {
+                    statusAtualizado = 'aguardando';
+                }
+            }
+            
             // Atualizar agendamento
+            const agoraStr = new Date().toLocaleString('pt-BR');
+            let observacoesParaSalvar = (observacoes !== undefined ? observacoes : agendamento.observacoes);
+            if (mudouHorario || mudouProfissional) {
+                const marcador = `REAGENDADO EM: ${agoraStr}`;
+                observacoesParaSalvar = `${observacoesParaSalvar ? observacoesParaSalvar + '\n' : ''}${marcador}`;
+            }
             await agendamento.update({
                 paciente_id: paciente_id || agendamento.paciente_id,
-                profissional_id: profissional_id || agendamento.profissional_id,
+                profissional_id: profissional_id !== undefined ? profissionalIdNormalizado : agendamento.profissional_id,
                 produto_id: produto_id || agendamento.produto_id,
                 data_agendamento: data_agendamento || agendamento.data_agendamento,
-                observacoes: observacoes !== undefined ? observacoes : agendamento.observacoes,
+                observacoes: observacoesParaSalvar,
                 valor: valor !== undefined ? valor : agendamento.valor,
                 desconto: desconto !== undefined ? desconto : agendamento.desconto,
-                valor_final
+                valor_final,
+                status: statusAtualizado
             });
             
             // Buscar agendamento atualizado com includes
@@ -589,7 +677,7 @@ class AgendamentoController {
             const { id } = req.params;
             const { status } = req.body;
             
-            const statusValidos = ['agendado', 'confirmado', 'concluido', 'cancelado', 'faltou'];
+            const statusValidos = ['aguardando', 'consultando', 'finalizado', 'cancelado', 'faltou'];
             
             if (!statusValidos.includes(status)) {
                 return res.status(400).json({
@@ -608,12 +696,24 @@ class AgendamentoController {
             }
             
             await agendamento.update({ status });
-            
-            res.json({
-                success: true,
-                message: `Status alterado para: ${status}`,
-                data: agendamento
-            });
+            // Se cancelado, pagamentos voltam a ser pendentes
+            if (status === 'cancelado') {
+                await Pagamento.update(
+                    { status: 'pendente', data_pagamento: null, confirmado_por: null },
+                    {
+                        where: {
+                            agendamento_id: id,
+                            status: { [Op.in]: ['pago'] }
+                        }
+                    }
+                );
+            }
+ 
+             res.json({
+                 success: true,
+                 message: `Status alterado para: ${status}`,
+                 data: agendamento
+             });
             
         } catch (error) {
             console.error('Erro ao alterar status:', error);
@@ -746,6 +846,140 @@ class AgendamentoController {
                 success: false,
                 message: 'Erro ao excluir agendamento: ' + error.message
             });
+        }
+    }
+    
+    // Reagendar agendamento que está com status 'faltou' criando um novo registro
+    static async reagendarAgendamento(req, res) {
+        try {
+            const { id } = req.params;
+            const { data_agendamento, profissional_id: profissionalIdRaw } = req.body;
+
+            if (!data_agendamento) {
+                return res.status(400).json({ success: false, message: 'Nova data/horário é obrigatória para reagendar' });
+            }
+
+            const agendamentoOriginal = await Agendamento.findByPk(id, {
+                include: [
+                    { model: Paciente, as: 'paciente', attributes: ['id', 'nome'] },
+                    { model: Usuario, as: 'profissional', attributes: ['id', 'nome'], required: false },
+                    { model: ItemAgendamento, as: 'itens', required: false },
+                    { model: Pagamento, as: 'pagamentos', required: false }
+                ]
+            });
+
+            if (!agendamentoOriginal) {
+                return res.status(404).json({ success: false, message: 'Agendamento original não encontrado' });
+            }
+
+            if (agendamentoOriginal.status !== 'faltou') {
+                return res.status(400).json({ success: false, message: 'Somente agendamentos com status "faltou" podem ser reagendados por este fluxo' });
+            }
+
+            // Normalizar profissional_id; se não vier, mantém o mesmo do original
+            const profissional_id = (function normalizeProfissionalId(v, fallback) {
+                if (v === undefined || v === null) return fallback || null;
+                if (typeof v === 'string') {
+                    const t = v.trim().toLowerCase();
+                    if (t === '' || t === 'null' || t === 'undefined') return fallback || null;
+                    const n = Number(t);
+                    if (!Number.isFinite(n)) return fallback || null;
+                    return n === 0 ? null : n;
+                }
+                if (typeof v === 'number') {
+                    if (!Number.isFinite(v)) return fallback || null;
+                    return v === 0 ? null : v;
+                }
+                return fallback || null;
+            })(profissionalIdRaw, agendamentoOriginal.profissional_id);
+
+            // Verificar conflito de horário para profissional (se houver)
+            if (profissional_id) {
+                const conflito = await Agendamento.findOne({
+                    where: {
+                        profissional_id,
+                        data_agendamento,
+                        status: { [Op.notIn]: ['cancelado', 'faltou'] }
+                    }
+                });
+                if (conflito) {
+                    return res.status(400).json({ success: false, message: 'Já existe um agendamento para este profissional neste horário' });
+                }
+            }
+
+            // Criar novo agendamento copiando dados
+            const dataReagendamento = new Date();
+            const dataReagendamentoStr = dataReagendamento.toLocaleString('pt-BR');
+            const observacoesNovas = `${agendamentoOriginal.observacoes ? agendamentoOriginal.observacoes + '\n' : ''}REAGENDADO EM: ${dataReagendamentoStr} (ID origem: ${agendamentoOriginal.id})`;
+
+            const novoAgendamento = await Agendamento.create({
+                paciente_id: agendamentoOriginal.paciente_id,
+                profissional_id,
+                produto_id: null,
+                data_agendamento,
+                observacoes: observacoesNovas,
+                valor: agendamentoOriginal.valor,
+                desconto: agendamentoOriginal.desconto,
+                valor_final: agendamentoOriginal.valor_final,
+                status: 'aguardando'
+            });
+
+            // Atualizar observações do agendamento original para indicar que foi reagendado
+            const obsOriginalAtualizada = `${agendamentoOriginal.observacoes ? agendamentoOriginal.observacoes + '\n' : ''}REAGENDADO PARA: ${novoAgendamento.id} EM: ${dataReagendamentoStr}`;
+            await agendamentoOriginal.update({ observacoes: obsOriginalAtualizada });
+            // Clonar itens do agendamento original
+            if (agendamentoOriginal.itens && agendamentoOriginal.itens.length > 0) {
+                for (const item of agendamentoOriginal.itens) {
+                    await ItemAgendamento.create({
+                        agendamento_id: novoAgendamento.id,
+                        produto_id: item.produto_id,
+                        quantidade: item.quantidade,
+                        valor_unitario: item.valor_unitario,
+                        desconto: item.desconto,
+                        observacoes: item.observacoes || null
+                    });
+                }
+            }
+
+            // Mover pagamento pendente, se existir
+            const pagamentoPendente = agendamentoOriginal.pagamentos?.find(p => p.status === 'pendente');
+            if (pagamentoPendente) {
+                await Pagamento.update(
+                    { agendamento_id: novoAgendamento.id },
+                    { where: { id: pagamentoPendente.id } }
+                );
+            }
+
+            // Mover pagamentos relevantes (pendente ou pago) para o novo agendamento
+            // Registros cancelados ou estornados permanecem vinculados ao original
+            await Pagamento.update(
+                { agendamento_id: novoAgendamento.id },
+                {
+                    where: {
+                        agendamento_id: agendamentoOriginal.id,
+                        status: { [Op.in]: ['pendente', 'pago'] }
+                    }
+                }
+            );
+
+            // Buscar novo agendamento com includes para resposta
+            const novoAgendamentoCompleto = await Agendamento.findByPk(novoAgendamento.id, {
+                include: [
+                    { model: Paciente, as: 'paciente', attributes: ['id', 'nome'] },
+                    { model: Usuario, as: 'profissional', attributes: ['id', 'nome'], required: false },
+                    { model: ItemAgendamento, as: 'itens', include: [{ model: Produto, as: 'produto', attributes: ['id', 'nome', 'categoria', 'preco'] }] },
+                    { model: Pagamento, as: 'pagamentos' }
+                ]
+            });
+
+            return res.json({
+                success: true,
+                message: 'Agendamento reagendado criando um novo registro',
+                data: novoAgendamentoCompleto
+            });
+        } catch (error) {
+            console.error('Erro ao reagendar criando novo agendamento:', error);
+            return res.status(500).json({ success: false, message: 'Erro ao reagendar agendamento', error: error.message });
         }
     }
 }

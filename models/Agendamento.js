@@ -17,7 +17,7 @@ const Agendamento = sequelize.define('Agendamento', {
     },
     profissional_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: 'usuarios',
             key: 'id'
@@ -40,9 +40,9 @@ const Agendamento = sequelize.define('Agendamento', {
         allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('agendado', 'confirmado', 'em_andamento', 'concluido', 'cancelado', 'faltou'),
-        allowNull: false,
-        defaultValue: 'agendado'
+        type: DataTypes.ENUM('aguardando', 'consultando', 'finalizado', 'cancelado', 'faltou'),
+        allowNull: true,
+        defaultValue: null
     },
     observacoes: {
         type: DataTypes.TEXT,

@@ -259,6 +259,8 @@
     position: relative !important;
     z-index: 100000 !important;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .modal-header {
@@ -470,4 +472,36 @@
     .modal-body, .modal-actions {
         padding: 15px;
     }
+}
+
+/* Novos status para Agenda */
+.status-aguardando {
+  background-color: #f59e0b; /* similar ao pendente */
+  color: #fff;
+}
+.status-consultando {
+  background-color: #3b82f6; /* azul para em atendimento */
+  color: #fff;
+}
+.status-finalizado {
+  background-color: #10b981; /* verde para concluído */
+  color: #fff;
+}
+.status-reagendado {
+  background-color: #fef3c7; /* amarelo claro (warning) */
+  color: #92400e;
+}
+/* Oculta ações e mostra badge na coluna de ações quando reagendado */
+.reagendado-row td:last-child { position: relative; }
+.reagendado-row td:last-child .actions-group { display: none; }
+.reagendado-row td:last-child::before {
+  content: 'Reagendado';
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  background: #fef3c7;
+  color: #92400e;
 }

@@ -71,6 +71,12 @@ function setupEventListeners() {
                 case 'excluir':
                     excluirAgendamento(id);
                     break;
+                case 'pagar':
+                    confirmarPagamentoAgendamento(id);
+                    break;
+                case 'atender':
+                    window.location.href = `/sistema/atendimento/${id}`;
+                    break;
             }
         }
     });
@@ -100,6 +106,7 @@ function buscarAgendamentos(pagina = 1) {
     if (busca) params.append('busca', busca);
     if (mes) params.append('mes', mes);
     if (ano) params.append('ano', ano);
+    if (window.MINHA_AGENDA && window.USER_TIPO === 'profissional') params.append('minhaAgenda', 'true');
     
     mostrarLoading();
     
@@ -123,11 +130,21 @@ function buscarAgendamentos(pagina = 1) {
         });
 }
 
+// Verificar minha agenda (profissional)
+function verificarMinhaAgenda() {
+    window.MINHA_AGENDA = true;
+    // Limpa filtros de mês/ano para usar data de hoje em diante
+    document.getElementById('mesSelect').value = '';
+    document.getElementById('anoSelect').value = '';
+    buscarAgendamentos(1);
+}
+
 // Limpar filtros
 function limparFiltros() {
     document.getElementById('buscaInput').value = '';
     document.getElementById('mesSelect').value = '';
     document.getElementById('anoSelect').value = '';
+    window.MINHA_AGENDA = false;
     buscarAgendamentos();
 }
 
@@ -136,17 +153,10 @@ function limparFiltros() {
 // Exibir agendamentos na tabela
 function exibirAgendamentos(agendamentos) {
     const tbody = document.getElementById('agendamentosTableBody');
-    
-    if (agendamentos.length === 0) {
-        mostrarVazio();
-        return;
-    }
-    
     tbody.innerHTML = agendamentos.map(agendamento => {
-        const dataFormatada = new Date(agendamento.data_agendamento).toLocaleString('pt-BR');
+        const dataAgendamento = new Date(agendamento.data_agendamento);
+        const dataFormatada = dataAgendamento.toLocaleString('pt-BR');
         const valor = agendamento.valor_final ? `R$ ${parseFloat(agendamento.valor_final).toFixed(2).replace('.', ',')}` : '-';
-        
-        // Exibir itens do agendamento
         let itensTexto = '-';
         if (agendamento.itens && agendamento.itens.length > 0) {
             itensTexto = agendamento.itens.map(item => {
@@ -156,16 +166,24 @@ function exibirAgendamentos(agendamentos) {
         } else if (agendamento.produto?.nome) {
             itensTexto = agendamento.produto.nome;
         }
-        
+        const isPago = !!(agendamento.pagamentos && agendamento.pagamentos.find(p => p.status === 'pago'));
+        const podeAlterarStatus = agendamento.status !== 'finalizado';
+        const isFaltou = agendamento.status === 'faltou';
+        const isOriginalReagendado = typeof agendamento.observacoes === 'string' && /REAGENDADO\s+PARA:/i.test(agendamento.observacoes);
         return `
-            <tr>
+            <tr class="${isOriginalReagendado ? 'reagendado-row' : ''}">
                 <td>${dataFormatada}</td>
                 <td>${agendamento.paciente?.nome || '-'}</td>
                 <td>${agendamento.paciente?.cpf || '-'}</td>
                 <td>${agendamento.profissional?.nome || '-'}</td>
                 <td title="${itensTexto}">${itensTexto.length > 50 ? itensTexto.substring(0, 50) + '...' : itensTexto}</td>
                 <td>${valor}</td>
-                <td><span class="status-badge status-${agendamento.status}">${agendamento.status}</span></td>
+                <td>${(() => {
+                    const s = agendamento.status;
+                    const statusHtml = s ? `<span class="status-badge status-${s}">${s}</span>` : '';
+                    const reagendadoBadge = isOriginalReagendado ? '<span class="status-badge status-reagendado" title="Agendamento reagendado">Reagendado</span>' : '';
+                    return statusHtml + (reagendadoBadge ? ' ' + reagendadoBadge : '');
+                })()}</td>
                 <td>${(() => {
                     if (!agendamento.pagamentos || agendamento.pagamentos.length === 0) {
                         return '<span class="payment-badge payment-pending">Não Pago</span>';
@@ -179,27 +197,38 @@ function exibirAgendamentos(agendamentos) {
                 })()}</td>
                 <td>
                     <div class="actions-group">
-                        <button class="btn btn-sm btn-success" data-id="${agendamento.id}" data-action="detalhes" title="Ver Detalhes Completos">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-info" data-id="${agendamento.id}" data-action="remarcar" title="Remarcar Data/Hora">
-                            <i class="fas fa-calendar-alt"></i>
-                        </button>
-                        <button class="btn btn-sm btn-warning" data-id="${agendamento.id}" data-action="status" title="Alterar Status">
-                            <i class="fas fa-clipboard-check"></i>
-                        </button>
-                        <button class="btn btn-sm btn-primary" data-id="${agendamento.id}" data-action="editar" title="Editar Produtos/Procedimentos">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" data-id="${agendamento.id}" data-action="excluir" title="Excluir Agendamento">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        ${isFaltou ? `
+                            <button class="btn btn-sm btn-info" data-id="${agendamento.id}" data-action="remarcar" title="Remarcar Data/Hora">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning" data-id="${agendamento.id}" data-action="status" title="Alterar Status">
+                                <i class="fas fa-clipboard-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" data-id="${agendamento.id}" data-action="excluir" title="Excluir Agendamento">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : `
+                            <button class="btn btn-sm btn-success" data-id="${agendamento.id}" data-action="detalhes" title="Ver Detalhes Completos">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-info" data-id="${agendamento.id}" data-action="remarcar" title="Remarcar Data/Hora">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>
+                            ${podeAlterarStatus ? `<button class=\"btn btn-sm btn-warning\" data-id=\"${agendamento.id}\" data-action=\"status\" title=\"Alterar Status\">\n                                <i class=\"fas fa-clipboard-check\"></i>\n                            </button>` : ''}
+                            ${(!isPago && !isFaltou) ? `<button class=\"btn btn-sm btn-success\" data-id=\"${agendamento.id}\" data-action=\"pagar\" title=\"Confirmar Pagamento\">\n                                <i class=\"fas fa-dollar-sign\"></i>\n                            </button>` : ''}
+                            <button class="btn btn-sm btn-primary" data-id="${agendamento.id}" data-action="editar" title="Editar Produtos/Procedimentos">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${window.USER_TIPO === 'profissional' ? `<button class=\"btn btn-sm btn-secondary\" data-id=\"${agendamento.paciente?.id}\" data-action=\"atender\" title=\"Atender Paciente\">\n                                <i class=\"fas fa-stethoscope\"></i>\n                            </button>` : ''}
+                            <button class="btn btn-sm btn-danger" data-id="${agendamento.id}" data-action="excluir" title="Excluir Agendamento">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        `}
                     </div>
                 </td>
             </tr>
         `;
     }).join('');
-    
     mostrarTabela();
 }
 
@@ -403,8 +432,10 @@ function remarcarAgendamento(id) {
                 document.getElementById('novaDataReagendar').value = dataFormatada;
                 document.getElementById('novaHoraReagendar').value = horaFormatada;
                 
-                // Exibir modal
-                document.getElementById('modalReagendar').style.display = 'flex';
+                // Exibir modal e armazenar status atual para a confirmação
+                const modalReagendar = document.getElementById('modalReagendar');
+                modalReagendar.dataset.status = agendamento.status || '';
+                modalReagendar.style.display = 'flex';
             } else {
                 alert('❌ Erro ao carregar dados do agendamento');
             }
@@ -418,6 +449,11 @@ function remarcarAgendamento(id) {
 // Funções para controlar modal de reagendar
 function fecharModalReagendar() {
     document.getElementById('modalReagendar').style.display = 'none';
+    // Limpar status armazenado no modal
+    const modalReagendar = document.getElementById('modalReagendar');
+    if (modalReagendar && modalReagendar.dataset) {
+        modalReagendar.dataset.status = '';
+    }
     agendamentoReagendandoId = null;
 }
 
@@ -446,10 +482,16 @@ function confirmarReagendamento(event) {
         .then(data => {
             if (data.success) {
                 const agendamento = data.data;
+                const statusAtual = (document.getElementById('modalReagendar').dataset.status || '').toLowerCase();
+                const isFaltou = statusAtual === 'faltou';
                 
-                // Atualizar no backend
-                fetch(`/sistema/agendamentos/${agendamentoReagendandoId}`, {
-                    method: 'PUT',
+                const url = isFaltou 
+                    ? `/sistema/agendamentos/${agendamentoReagendandoId}/reagendar`
+                    : `/sistema/agendamentos/${agendamentoReagendandoId}`;
+                const method = isFaltou ? 'POST' : 'PUT';
+                
+                fetch(url, {
+                    method: method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         data_agendamento: novaDataHora,
@@ -489,51 +531,70 @@ function alterarStatusAgendamento(id) {
                 const agendamento = data.data;
                 const statusAtual = agendamento.status;
                 
-                // Determinar novo status baseado no atual
-                let novoStatus;
-                let mensagem;
-                
-                if (statusAtual === 'agendado' || statusAtual === 'confirmado') {
-                    novoStatus = 'concluido';
-                    mensagem = `📋 MARCAR COMO ATENDIDO\n\nPaciente: ${agendamento.paciente?.nome}\nStatus atual: ${statusAtual.toUpperCase()}\n\n✅ Marcar como ATENDIDO?`;
-                } else if (statusAtual === 'concluido') {
-                    novoStatus = 'agendado';
-                    mensagem = `📋 MARCAR COMO AGENDADO\n\nPaciente: ${agendamento.paciente?.nome}\nStatus atual: ${statusAtual.toUpperCase()}\n\n📅 Marcar como AGENDADO?`;
-                } else {
-                    alert(`❌ Não é possível alterar o status '${statusAtual}'.\n\nApenas agendamentos com status 'agendado', 'confirmado' ou 'concluido' podem ser alterados.`);
-                    return;
+                // Construir modal simples com select
+                const modalId = 'modalStatus';
+                let modal = document.getElementById(modalId);
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = modalId;
+                    modal.className = 'modal-overlay';
+                    modal.innerHTML = `
+                        <div class="modal">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Alterar Status</h3>
+                                <button class="close-btn" onclick="document.getElementById('${modalId}').style.display='none'">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label class="form-label">Novo Status</label>
+                                    <select id="selectNovoStatus" class="form-select">
+                                        <option value="aguardando">aguardando</option>
+                                        <option value="consultando">consultando</option>
+                                        <option value="finalizado">finalizado</option>
+                                        <option value="cancelado">cancelado</option>
+                                        <option value="faltou">faltou</option>
+                                    </select>
+                                </div>
+                                <div class="alert alert-info">
+                                    Status e pagamento são campos diferentes. Pagamento pode ser confirmado antes do atendimento.
+                                </div>
+                            </div>
+                            <div class="modal-actions">
+                                <button class="btn btn-secondary" onclick="document.getElementById('${modalId}').style.display='none'">Cancelar</button>
+                                <button id="btnSalvarStatus" class="btn btn-primary">Salvar</button>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(modal);
                 }
-                
-                const confirmacao = confirm(mensagem);
-                
-                if (!confirmacao) return;
-                
-                // Atualizar status no backend
-                fetch(`/sistema/agendamentos/${id}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: novoStatus })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        alert(`✅ Status alterado para: ${novoStatus.toUpperCase()}`);
-                        buscarAgendamentos();
-                    } else {
-                        alert('❌ ' + result.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    alert('❌ Erro ao alterar status');
-                });
-            } else {
-                alert('❌ Erro ao carregar dados do agendamento');
+                document.getElementById('selectNovoStatus').value = statusAtual;
+                document.getElementById(modalId).style.display = 'flex';
+                const btnSalvar = document.getElementById('btnSalvarStatus');
+                btnSalvar.onclick = function() {
+                    const novoStatus = document.getElementById('selectNovoStatus').value;
+                    fetch(`/sistema/agendamentos/${id}/status`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: novoStatus })
+                    })
+                    .then(r => r.json())
+                    .then(result => {
+                        if (result.success) {
+                            document.getElementById(modalId).style.display = 'none';
+                            buscarAgendamentos(paginaAtual);
+                        } else {
+                            alert('❌ ' + (result.message || 'Erro ao alterar status'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erro:', err);
+                        alert('❌ Erro ao alterar status');
+                    });
+                };
             }
         })
         .catch(error => {
             console.error('Erro:', error);
-            alert('❌ Erro ao carregar agendamento');
+            alert('❌ Erro ao carregar dados do agendamento');
         });
 }
 
@@ -724,10 +785,7 @@ function salvarAgendamento(event) {
         return;
     }
     
-    if (!profissionalId) {
-        alert('❌ Selecione um profissional');
-        return;
-    }
+    // Profissional é opcional; quando não selecionado, o agendamento fica visível a todos os profissionais.
     
     if (!data || !horario) {
         alert('❌ Data e horário são obrigatórios');
@@ -785,7 +843,7 @@ function salvarAgendamento(event) {
     
     const dados = {
         paciente_id: pacienteId,
-        profissional_id: profissionalId,
+        profissional_id: profissionalId || null,
         data_agendamento: dataAgendamento,
         observacoes: observacoes,
         valor: valorTotal > 0 ? valorTotal : null,
@@ -828,7 +886,7 @@ function carregarProfissionais() {
         .then(data => {
             if (data.success) {
                 const select = document.getElementById('profissionalSelect');
-                select.innerHTML = '<option value="">Selecione um profissional</option>';
+                select.innerHTML = '<option value="">Sem profissional (visível a todos)</option>';
                 data.data.forEach(prof => {
                     select.innerHTML += `<option value="${prof.id}">${prof.nome} - ${prof.especialidade || 'Geral'}</option>`;
                 });
@@ -1066,5 +1124,62 @@ function excluirAgendamento(id) {
     .catch(error => {
         console.error('Erro:', error);
         alert('❌ Erro ao excluir agendamento');
+    });
+}
+
+// Delegação de eventos dos botões de ação
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.actions-group')) {
+        const btn = e.target.closest('button');
+        const id = btn.getAttribute('data-id');
+        const action = btn.getAttribute('data-action');
+        if (id && action) {
+            switch(action) {
+                case 'detalhes':
+                    verDetalhesAgendamento(id);
+                    break;
+                case 'remarcar':
+                    remarcarAgendamento(id);
+                    break;
+                case 'status':
+                    alterarStatusAgendamento(id);
+                    break;
+                case 'pagar':
+                    confirmarPagamentoAgendamento(id);
+                    break;
+                case 'editar':
+                    editarProdutosAgendamento(id);
+                    break;
+                case 'excluir':
+                    excluirAgendamento(id);
+                    break;
+            }
+        }
+    }
+});
+
+
+// Confirmar pagamento do agendamento (independente do status)
+function confirmarPagamentoAgendamento(id) {
+    const confirmar = confirm('Confirmar pagamento deste agendamento?');
+    if (!confirmar) return;
+    
+    fetch(`/sistema/agendamentos/${id}/pagamento`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('✅ Pagamento confirmado com sucesso!');
+            buscarAgendamentos(paginaAtual);
+        } else {
+            alert('❌ ' + (result.message || 'Erro ao confirmar pagamento'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('❌ Erro ao confirmar pagamento');
     });
 }

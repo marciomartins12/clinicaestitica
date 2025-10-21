@@ -72,10 +72,13 @@ router.get('/agenda', authController.isLoggedIn, async (req, res) => {
 
 // Rotas para agendamentos
 router.get('/agendamentos', authController.isLoggedIn, AgendamentoController.buscarAgendamentos);
-router.post('/agendamentos', authController.isLoggedIn, AgendamentoController.criarAgendamento);
 router.get('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.buscarAgendamentoPorId);
+router.post('/agendamentos', authController.isLoggedIn, AgendamentoController.criarAgendamento);
 router.put('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.atualizarAgendamento);
 router.put('/agendamentos/:id/status', authController.isLoggedIn, AgendamentoController.alterarStatus);
+router.delete('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.excluirAgendamento);
+// Novo endpoint: reagendar criando novo agendamento a partir de um "faltou"
+router.post('/agendamentos/:id/reagendar', authController.isLoggedIn, AgendamentoController.reagendarAgendamento);
 router.post('/agendamentos/:id/pagamento', authController.isLoggedIn, AgendamentoController.confirmarPagamento);
 router.delete('/agendamentos/:id', authController.isLoggedIn, AgendamentoController.excluirAgendamento);
 router.get('/pacientes/buscar', authController.isLoggedIn, AgendamentoController.buscarPacientes);

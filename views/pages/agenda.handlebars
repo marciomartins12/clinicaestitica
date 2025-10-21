@@ -112,6 +112,14 @@
                         Limpar
                     </button>
                 </div>
+                {{#if (eq user.tipo_usuario 'profissional')}}
+                <div class="form-group">
+                    <button id="btnMinhaAgenda" class="btn btn-outline" onclick="verificarMinhaAgenda()">
+                        <i class="fas fa-user-check"></i>
+                        Verificar minha agenda
+                    </button>
+                </div>
+                {{/if}}
             </div>
         </div>
 
@@ -192,11 +200,11 @@
                     <input type="hidden" id="pacienteId">
                 </div>
 
-                <!-- Profissional -->
+                <!-- Profissional (opcional) -->
                  <div style="margin-bottom: 15px;">
-                     <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Profissional *</label>
-                     <select id="profissionalSelect" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                         <option value="">Selecione um profissional</option>
+                     <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px; font-size: 14px;">Profissional (opcional)</label>
+                     <select id="profissionalSelect" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                         <option value="">Sem profissional (visível a todos)</option>
                      </select>
                  </div>
 
@@ -268,6 +276,7 @@
     </div>
 </div>
 
+<script>window.USER_TIPO = '{{user.tipo_usuario}}';</script>
 <script src="/js/menuMobile.js"></script>
 <script src="/js/agenda/agenda.js"></script>
 
