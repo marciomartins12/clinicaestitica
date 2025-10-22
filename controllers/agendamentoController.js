@@ -15,9 +15,15 @@ class AgendamentoController {
                 whereClause.paciente_id = pacienteIdParam;
             }
             
-            // Filtro por status
+            // Filtro por status (suporta múltiplos via vírgula)
             if (status) {
-                whereClause.status = status;
+                const validStatuses = ['aguardando', 'consultando', 'finalizado', 'cancelado', 'faltou'];
+                const statusesArr = String(status).split(',').map(s => s.trim()).filter(s => validStatuses.includes(s));
+                if (statusesArr.length > 1) {
+                    whereClause.status = { [Op.in]: statusesArr };
+                } else if (statusesArr.length === 1) {
+                    whereClause.status = statusesArr[0];
+                }
             }
             
             // Filtro por mês e ano

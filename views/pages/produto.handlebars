@@ -73,6 +73,10 @@
                         <i class="fas fa-capsules"></i>
                         Suplementos
                     </div>
+                    <div class="tab-btn" onclick="switchTab('combos')">
+                        <i class="fas fa-layer-group"></i>
+                        Combos
+                    </div>
 
                 </div>
             </div>
@@ -177,6 +181,26 @@
 
 
 
+            <!-- Combos -->
+            <div id="combos" class="tab-content">
+                <div class="products-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h4 style="margin: 0; color: #1e293b;">
+                            <i class="fas fa-layer-group"></i>
+                            Combos
+                        </h4>
+                        <button class="new-product-btn" onclick="createNewProduct('combo')">
+                            <i class="fas fa-plus"></i>
+                            Novo Combo
+                        </button>
+                    </div>
+                    <div id="combosContainer">
+                        <!-- Combos serão carregados via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+
             <!-- Estado Vazio -->
             <div class="empty-state" id="emptyState" style="display: none;">
                 <i class="fas fa-box"></i>
@@ -194,7 +218,8 @@
         let products = {
             procedures: [],
             medications: [],
-            supplements: []
+            supplements: [],
+            combos: []
         };
 
         let currentTab = 'procedures';
@@ -261,6 +286,20 @@
                     }
                 } else {
                     products.supplements = [];
+                }
+
+                // Carregar combos
+                console.log('Carregando combos...');
+                const combosResponse = await fetch('/sistema/produtos/api?categoria=combo');
+                if (combosResponse.ok) {
+                    const combosData = await combosResponse.json();
+                    if (combosData.success && combosData.data) {
+                        products.combos = combosData.data.map(mapProdutoToCombo);
+                    } else {
+                        products.combos = [];
+                    }
+                } else {
+                    products.combos = [];
                 }
                 
                 console.log('Produtos carregados:', products);
@@ -348,9 +387,20 @@
             };
         }
         
+        // Mapear produto do banco para formato de combo
+        function mapProdutoToCombo(produto) {
+            return {
+                id: produto.id,
+                name: produto.nome,
+                category: produto.categoria || 'Geral',
+                price: parseFloat(produto.preco),
+                description: produto.descricao || ''
+            };
+        }
+
         // Mostrar loading
         function showLoading() {
-            const containers = ['proceduresContainer', 'medicationsContainer', 'supplementsContainer'];
+            const containers = ['proceduresContainer', 'medicationsContainer', 'supplementsContainer', 'combosContainer'];
             containers.forEach(containerId => {
                 const container = document.getElementById(containerId);
                 if (container) {
@@ -462,6 +512,8 @@
                         return renderMedication(product);
                     case 'supplements':
                         return renderSupplement(product);
+                    case 'combos':
+                        return renderCombo(product);
 
                     default:
                         return '';
@@ -616,6 +668,38 @@
         }
 
 
+        // Renderizar combo
+        function renderCombo(combo) {
+            return `
+                <div class="product-card combo">
+                    <div class="product-header">
+                        <div>
+                            <div class="product-title">${combo.name}</div>
+                            <div class="product-category">${combo.category}</div>
+                        </div>
+                        <div class="product-price">${formatCurrency(combo.price)}</div>
+                    </div>
+
+                    <div class="product-content">
+                        <div class="product-description">
+                            <p><strong>Descrição:</strong> ${combo.description || 'Sem descrição'}</p>
+                        </div>
+                    </div>
+
+                    <div class="product-actions">
+                        <button class="product-btn edit" onclick="editProduct('combo', ${combo.id})">
+                            <i class="fas fa-edit"></i>
+                            Editar
+                        </button>
+                        <button class="product-btn delete" onclick="deleteProduct('combo', ${combo.id})">
+                            <i class="fas fa-trash"></i>
+                            Excluir
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
 
         // Aplicar filtros
         function applyFilters() {
@@ -630,6 +714,8 @@
                 showCreateMedicationModal();
             } else if (type === 'supplement') {
                 showCreateSupplementModal();
+            } else if (type === 'combo') {
+                showCreateComboModal();
             } else {
                 Notification.info(`Funcionalidade de novo ${getTypeLabel(type)} em desenvolvimento`);
             }
@@ -753,6 +839,8 @@
                 showEditMedicationModal(id);
             } else if (type === 'supplement') {
                 showEditSupplementModal(id);
+            } else if (type === 'combo') {
+                showEditComboModal(id);
             } else {
                 Notification.info(`Funcionalidade de editar ${getTypeLabel(type)} em desenvolvimento`);
             }
@@ -766,6 +854,8 @@
                 deleteMedication(id);
             } else if (type === 'supplement') {
                 deleteSupplement(id);
+            } else if (type === 'combo') {
+                deleteCombo(id);
             } else {
                 Notification.info(`Funcionalidade de excluir ${getTypeLabel(type)} em desenvolvimento`);
             }
@@ -1531,6 +1621,242 @@
             }
         }
 
+        // ===== FUNÇÕES PARA COMBOS =====
+        
+        // Mostrar modal de criar combo
+        function showCreateComboModal() {
+            const modalHtml = `
+                <div id="createComboModal" class="modal-overlay" onclick="closeCreateComboModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-plus"></i> Novo Combo</h3>
+                            <button class="modal-close" onclick="closeCreateComboModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="createComboForm" onsubmit="submitCreateCombo(event)">
+                            <div class="modal-body">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Nome do Combo *</label>
+                                        <input type="text" name="nome" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Preço (R$) *</label>
+                                        <input type="number" name="preco" class="form-input" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Código</label>
+                                    <input type="text" name="codigo" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Descrição</label>
+                                    <textarea name="descricao" class="form-textarea" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeCreateComboModal()">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Salvar Combo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        // Fechar modal de criar combo
+        function closeCreateComboModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            
+            const modal = document.getElementById('createComboModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Submeter formulário de criar combo
+        async function submitCreateCombo(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const comboData = {
+                nome: formData.get('nome'),
+                descricao: formData.get('descricao'),
+                categoria: 'combo',
+                preco: parseFloat(formData.get('preco')),
+                codigo: formData.get('codigo') || null
+            };
+            
+            try {
+                const response = await fetch('/sistema/produtos/api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(comboData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Notification.success('Combo criado com sucesso!');
+                    closeCreateComboModal();
+                    loadProducts(); // Recarregar produtos
+                } else {
+                    Notification.error(result.message || 'Erro ao criar combo');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao criar combo:', error);
+                Notification.error('Erro ao criar combo');
+            }
+        }
+        
+        // Mostrar modal de editar combo
+        function showEditComboModal(id) {
+            const combo = products.combos.find(p => p.id === id);
+            if (!combo) {
+                Notification.error('Combo não encontrado');
+                return;
+            }
+            
+            const modalHtml = `
+                <div id="editComboModal" class="modal-overlay" onclick="closeEditComboModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-edit"></i> Editar Combo</h3>
+                            <button class="modal-close" onclick="closeEditComboModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="editComboForm" onsubmit="submitEditCombo(event, ${id})">
+                            <div class="modal-body">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Nome do Combo *</label>
+                                        <input type="text" name="nome" class="form-input" value="${combo.name}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Preço (R$) *</label>
+                                        <input type="number" name="preco" class="form-input" step="0.01" min="0" value="${combo.price}" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Código</label>
+                                    <input type="text" name="codigo" class="form-input" value="">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Descrição</label>
+                                    <textarea name="descricao" class="form-textarea" rows="3">${combo.description || ''}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeEditComboModal()">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        // Fechar modal de editar combo
+        function closeEditComboModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            
+            const modal = document.getElementById('editComboModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Submeter formulário de editar combo
+        async function submitEditCombo(event, id) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const comboData = {
+                nome: formData.get('nome'),
+                descricao: formData.get('descricao'),
+                categoria: 'combo',
+                preco: parseFloat(formData.get('preco')),
+                codigo: formData.get('codigo') || null
+            };
+            
+            try {
+                const response = await fetch(`/sistema/produtos/api/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(comboData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Notification.success('Combo atualizado com sucesso!');
+                    closeEditComboModal();
+                    loadProducts(); // Recarregar produtos
+                } else {
+                    Notification.error(result.message || 'Erro ao atualizar combo');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao atualizar combo:', error);
+                Notification.error('Erro ao atualizar combo');
+            }
+        }
+        
+        // Excluir combo
+        async function deleteCombo(id) {
+            const combo = products.combos.find(p => p.id === id);
+            if (!combo) {
+                Notification.error('Combo não encontrado');
+                return;
+            }
+            
+            if (!confirm(`Tem certeza que deseja excluir o combo "${combo.name}"?\n\nEsta ação não pode ser desfeita.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/sistema/produtos/api/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Notification.success('Combo excluído com sucesso!');
+                    loadProducts(); // Recarregar produtos
+                } else {
+                    Notification.error(result.message || 'Erro ao excluir combo');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao excluir combo:', error);
+                Notification.error('Erro ao excluir combo');
+            }
+        }
+        
         // Funções auxiliares
         function formatCurrency(value) {
             return new Intl.NumberFormat('pt-BR', {

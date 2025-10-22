@@ -535,6 +535,7 @@ router.get('/atendimento/:id', authController.isLoggedIn, async (req, res) => {
             user: user,
             clinica: clinica || { nome: 'Clínica' },
             paciente: paciente,
+            activeTab: 'anamnese',
             success: req.flash('success'),
             error: req.flash('error')
         });
@@ -545,6 +546,186 @@ router.get('/atendimento/:id', authController.isLoggedIn, async (req, res) => {
     }
 });
 
+// Rotas por item de atendimento do paciente
+router.get('/atendimento/:id/anamnese', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = await Usuario.findByPk(req.session.user.id);
+        const pacienteId = req.params.id;
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Anamnese para atendente ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
+        const clinica = await Clinica.findOne();
+        const { Paciente } = require('../models');
+        const paciente = await Paciente.findByPk(pacienteId);
+        if (!paciente) {
+            req.flash('error', 'Paciente não encontrado');
+            return res.redirect('/sistema/atendimento');
+        }
+        res.render('pages/atendimento-paciente', {
+            user,
+            clinica: clinica || { nome: 'Clínica' },
+            paciente,
+            activeTab: 'anamnese',
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar anamnese:', error);
+        req.flash('error', 'Erro ao carregar anamnese');
+        res.redirect('/sistema/atendimento');
+    }
+});
+
+router.get('/atendimento/:id/exames', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = await Usuario.findByPk(req.session.user.id);
+        const pacienteId = req.params.id;
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Exames para atendente ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
+        const clinica = await Clinica.findOne();
+        const { Paciente } = require('../models');
+        const paciente = await Paciente.findByPk(pacienteId);
+        if (!paciente) {
+            req.flash('error', 'Paciente não encontrado');
+            return res.redirect('/sistema/atendimento');
+        }
+        res.render('pages/atendimento-paciente', {
+            user,
+            clinica: clinica || { nome: 'Clínica' },
+            paciente,
+            activeTab: 'exames',
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar exames:', error);
+        req.flash('error', 'Erro ao carregar exames');
+        res.redirect('/sistema/atendimento');
+    }
+});
+
+router.get('/atendimento/:id/fotos', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = await Usuario.findByPk(req.session.user.id);
+        const pacienteId = req.params.id;
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Fotos para atendente ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
+        const clinica = await Clinica.findOne();
+        const { Paciente } = require('../models');
+        const paciente = await Paciente.findByPk(pacienteId);
+        if (!paciente) {
+            req.flash('error', 'Paciente não encontrado');
+            return res.redirect('/sistema/atendimento');
+        }
+        res.render('pages/atendimento-paciente', {
+            user,
+            clinica: clinica || { nome: 'Clínica' },
+            paciente,
+            activeTab: 'fotos',
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar fotos:', error);
+        req.flash('error', 'Erro ao carregar fotos');
+        res.redirect('/sistema/atendimento');
+    }
+});
+
+router.get('/atendimento/:id/evolucao', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = await Usuario.findByPk(req.session.user.id);
+        const pacienteId = req.params.id;
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Evolução para atendente ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
+        const clinica = await Clinica.findOne();
+        const { Paciente } = require('../models');
+        const paciente = await Paciente.findByPk(pacienteId);
+        if (!paciente) {
+            req.flash('error', 'Paciente não encontrado');
+            return res.redirect('/sistema/atendimento');
+        }
+        res.render('pages/atendimento-paciente', {
+            user,
+            clinica: clinica || { nome: 'Clínica' },
+            paciente,
+            activeTab: 'evolucao',
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar evolução:', error);
+        req.flash('error', 'Erro ao carregar evolução');
+        res.redirect('/sistema/atendimento');
+    }
+});
+
+router.get('/atendimento/:id/atestado', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = await Usuario.findByPk(req.session.user.id);
+        const pacienteId = req.params.id;
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Atestado para atendente ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
+        const clinica = await Clinica.findOne();
+        const { Paciente } = require('../models');
+        const paciente = await Paciente.findByPk(pacienteId);
+        if (!paciente) {
+            req.flash('error', 'Paciente não encontrado');
+            return res.redirect('/sistema/atendimento');
+        }
+        res.render('pages/atendimento-paciente', {
+            user,
+            clinica: clinica || { nome: 'Clínica' },
+            paciente,
+            activeTab: 'atestado',
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar atestado:', error);
+        req.flash('error', 'Erro ao carregar atestado');
+        res.redirect('/sistema/atendimento');
+    }
+});
+
+router.get('/atendimento/:id/prescricao', authController.isLoggedIn, async (req, res) => {
+    try {
+        const user = await Usuario.findByPk(req.session.user.id);
+        const pacienteId = req.params.id;
+        if (user.tipo_usuario === 'atendente') {
+            console.log(`Acesso negado à página Prescrição para atendente ${user.nome}`);
+            return res.redirect('/sistema/dashboard');
+        }
+        const clinica = await Clinica.findOne();
+        const { Paciente } = require('../models');
+        const paciente = await Paciente.findByPk(pacienteId);
+        if (!paciente) {
+            req.flash('error', 'Paciente não encontrado');
+            return res.redirect('/sistema/atendimento');
+        }
+        res.render('pages/atendimento-paciente', {
+            user,
+            clinica: clinica || { nome: 'Clínica' },
+            paciente,
+            activeTab: 'prescricao',
+            success: req.flash('success'),
+            error: req.flash('error')
+        });
+    } catch (error) {
+        console.error('Erro ao carregar prescrição:', error);
+        req.flash('error', 'Erro ao carregar prescrição');
+        res.redirect('/sistema/atendimento');
+    }
+});
 // Rotas para financeiro
 router.get('/financeiro', authController.isLoggedIn, FinanceiroController.pageFinanceiro);
 router.get('/financeiro/dashboard', authController.isLoggedIn, FinanceiroController.buscarDashboardFinanceiro);

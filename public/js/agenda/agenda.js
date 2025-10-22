@@ -90,6 +90,25 @@ function inicializarFiltros() {
     let anoEmQueEstamos = new Date().getFullYear();
     document.getElementById('mesSelect').value = mesDoAno;
     document.getElementById('anoSelect').value = anoEmQueEstamos;
+    // pré-seleciona "aguardando"
+    const cbAguardando = document.querySelector('.status-filter[value="aguardando"]');
+    if (cbAguardando) cbAguardando.checked = true;
+}
+
+function limparFiltros() {
+    const buscaInput = document.getElementById('buscaInput');
+    const mesSelect = document.getElementById('mesSelect');
+    const anoSelect = document.getElementById('anoSelect');
+
+    if (buscaInput) buscaInput.value = '';
+    if (mesSelect) mesSelect.value = '';
+    if (anoSelect) anoSelect.value = '';
+
+    document.querySelectorAll('.status-filter').forEach(cb => { cb.checked = false; });
+    const cbAguardando = document.querySelector('.status-filter[value="aguardando"]');
+    if (cbAguardando) cbAguardando.checked = true;
+
+    buscarAgendamentos(1);
 }
 
 // Buscar agendamentos
@@ -97,6 +116,7 @@ function buscarAgendamentos(pagina = 1) {
     const busca = document.getElementById('buscaInput').value;
     const mes = document.getElementById('mesSelect').value;
     const ano = document.getElementById('anoSelect').value;
+    const selectedStatuses = Array.from(document.querySelectorAll('.status-filter:checked')).map(el => el.value);
     
     const params = new URLSearchParams({
         page: pagina,
@@ -106,6 +126,7 @@ function buscarAgendamentos(pagina = 1) {
     if (busca) params.append('busca', busca);
     if (mes) params.append('mes', mes);
     if (ano) params.append('ano', ano);
+    if (selectedStatuses.length > 0) params.append('status', selectedStatuses.join(','));
     if (window.MINHA_AGENDA && window.USER_TIPO === 'profissional') params.append('minhaAgenda', 'true');
     
     mostrarLoading();
@@ -132,21 +153,132 @@ function buscarAgendamentos(pagina = 1) {
 
 // Verificar minha agenda (profissional)
 function verificarMinhaAgenda() {
-    window.MINHA_AGENDA = true;
-    // Limpa filtros de mês/ano para usar data de hoje em diante
-    document.getElementById('mesSelect').value = '';
-    document.getElementById('anoSelect').value = '';
-    buscarAgendamentos(1);
+    abrirModalMinhaAgenda();
+    carregarMinhaAgenda(1);
 }
 
-// Limpar filtros
-function limparFiltros() {
-    document.getElementById('buscaInput').value = '';
-    document.getElementById('mesSelect').value = '';
-    document.getElementById('anoSelect').value = '';
-    window.MINHA_AGENDA = false;
-    buscarAgendamentos();
+function abrirModalMinhaAgenda() {
+    const modal = document.getElementById('modalMinhaAgenda');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
 }
+
+function fecharModalMinhaAgenda() {
+    const modal = document.getElementById('modalMinhaAgenda');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function carregarMinhaAgenda(pagina = 1) {
+    const params = new URLSearchParams({
+        page: pagina,
+        limit: 10,
+        minhaAgenda: 'true'
+    });
+
+    mostrarLoadingMinhaAgenda();
+
+    fetch(`/sistema/agendamentos?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderMinhaAgenda(data.data);
+            } else {
+                mostrarErroMinhaAgenda('Erro ao carregar agendamentos');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarErroMinhaAgenda('Erro ao carregar agendamentos');
+        })
+        .finally(() => {
+            ocultarLoadingMinhaAgenda();
+        });
+}
+
+function renderMinhaAgenda(agendamentos) {
+    const lista = document.getElementById('minhaAgendaLista');
+    const empty = document.getElementById('minhaAgendaEmpty');
+    if (!lista || !empty) return;
+
+    if (!agendamentos || agendamentos.length === 0) {
+        lista.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+
+    empty.style.display = 'none';
+
+    lista.innerHTML = agendamentos.map(agendamento => {
+        const dataAgendamento = new Date(agendamento.data_agendamento);
+        const dataFormatada = dataAgendamento.toLocaleString('pt-BR');
+        const profissional = agendamento.profissional?.nome || 'Sem profissional';
+        let itensTexto = '-';
+        if (agendamento.itens && agendamento.itens.length > 0) {
+            itensTexto = agendamento.itens.map(item => {
+                const qtd = item.quantidade > 1 ? ` (${item.quantidade}x)` : '';
+                return `${item.produto.nome}${qtd}`;
+            }).join(', ');
+        } else if (agendamento.produto?.nome) {
+            itensTexto = agendamento.produto.nome;
+        }
+        const status = agendamento.status || 'agendado';
+        const isPago = !!(agendamento.pagamentos && agendamento.pagamentos.find(p => p.status === 'pago'));
+        const valor = agendamento.valor_final ? `R$ ${parseFloat(agendamento.valor_final).toFixed(2).replace('.', ',')}` : '-';
+        return `
+            <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: #fff; display: grid; grid-template-columns: 1fr auto; gap: 8px;">
+                <div>
+                    <div style="font-weight: 600; color: #1e293b;">${dataFormatada}</div>
+                    <div style="color: #374151;">Paciente: ${agendamento.paciente?.nome || '-'}</div>
+                    <div style="color: #374151;">Profissional: ${profissional}</div>
+                    <div style="color: #4b5563;" title="${itensTexto}">Procedimentos: ${itensTexto.length > 80 ? itensTexto.substring(0,80) + '...' : itensTexto}</div>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                        <span class="status-badge status-${status}">${status}</span>
+                        ${isPago ? '<span class="payment-badge payment-paid">Pago</span>' : '<span class="payment-badge payment-pending">Não Pago</span>'}
+                        <span style="color:#1e293b; font-weight:600;">${valor}</span>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction: column; gap:6px; align-items:flex-end;">
+                    ${window.USER_TIPO === 'profissional' ? `<button class="btn btn-sm btn-secondary" onclick="window.location.href='/sistema/atendimento/${agendamento.paciente?.id}'"><i class="fas fa-stethoscope"></i> Atender</button>` : ''}
+                    <button class="btn btn-sm btn-success" onclick="verDetalhesAgendamento(${agendamento.id})"><i class="fas fa-eye"></i> Detalhes</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function mostrarLoadingMinhaAgenda() {
+    const loading = document.getElementById('minhaAgendaLoading');
+    const empty = document.getElementById('minhaAgendaEmpty');
+    const lista = document.getElementById('minhaAgendaLista');
+    if (loading) loading.style.display = 'block';
+    if (empty) empty.style.display = 'none';
+    if (lista) lista.innerHTML = '';
+}
+
+function ocultarLoadingMinhaAgenda() {
+    const loading = document.getElementById('minhaAgendaLoading');
+    if (loading) loading.style.display = 'none';
+}
+
+function mostrarErroMinhaAgenda(mensagem) {
+    const empty = document.getElementById('minhaAgendaEmpty');
+    const lista = document.getElementById('minhaAgendaLista');
+    if (empty) {
+        empty.style.display = 'block';
+        empty.querySelector('p')?.append(` ${mensagem}`);
+    }
+    if (lista) lista.innerHTML = '';
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modalMinhaAgenda')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        fecharModalMinhaAgenda();
+    }
+});
 
 // ===== FUNÇÕES DE EXIBIÇÃO =====
 
@@ -1127,36 +1259,8 @@ function excluirAgendamento(id) {
     });
 }
 
-// Delegação de eventos dos botões de ação
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.actions-group')) {
-        const btn = e.target.closest('button');
-        const id = btn.getAttribute('data-id');
-        const action = btn.getAttribute('data-action');
-        if (id && action) {
-            switch(action) {
-                case 'detalhes':
-                    verDetalhesAgendamento(id);
-                    break;
-                case 'remarcar':
-                    remarcarAgendamento(id);
-                    break;
-                case 'status':
-                    alterarStatusAgendamento(id);
-                    break;
-                case 'pagar':
-                    confirmarPagamentoAgendamento(id);
-                    break;
-                case 'editar':
-                    editarProdutosAgendamento(id);
-                    break;
-                case 'excluir':
-                    excluirAgendamento(id);
-                    break;
-            }
-        }
-    }
-});
+/* Removido: duplicava ações de clique causando confirmação em dobro.
+   O handler central de cliques já é definido em setupEventListeners(). */
 
 
 // Confirmar pagamento do agendamento (independente do status)

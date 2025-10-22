@@ -102,8 +102,8 @@ app.set('views', path.join(__dirname, 'views'));
 
 
 // Middlewares
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true, limit: '20mb', parameterLimit: 100000 }));
+app.use(bodyParser.json({ limit: '20mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 

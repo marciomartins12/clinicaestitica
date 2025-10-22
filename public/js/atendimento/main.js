@@ -50,9 +50,9 @@ const AtendimentoApp = {
         });
 
         // Event listener para preview de imagem
-        const fotoInput = document.getElementById('fotoInput');
-        if (fotoInput) {
-            fotoInput.addEventListener('change', function() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
                 FotoManager.previewImage(this);
             });
         }

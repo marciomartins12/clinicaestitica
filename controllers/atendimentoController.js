@@ -93,14 +93,15 @@ class AtendimentoController {
     // Salvar exame
     static async salvarExame(req, res) {
         try {
-            const { paciente_id, tipo_exame, data_exame, laboratorio, medico_solicitante, observacoes, status } = req.body;
+            const { paciente_id, tipo_exame, data_exame, laboratorio, observacoes, status } = req.body;
+            const solicitanteNome = (req.session && req.session.user && req.session.user.nome) ? req.session.user.nome : null;
             
             const exame = await Exame.create({
                 paciente_id,
                 tipo_exame,
                 data_exame,
                 laboratorio,
-                medico_solicitante,
+                medico_solicitante: solicitanteNome,
                 observacoes,
                 status: status || 'solicitado'
             });
@@ -257,9 +258,8 @@ class AtendimentoController {
             console.log('Dados da foto:', { tipoArquivo, tamanhoArquivo });
             
             // Salvar no banco como BLOB
-            const foto = await FotoPaciente.create({
+            const fotoData = {
                 paciente_id,
-                procedimento_id,
                 titulo,
                 descricao,
                 momento_procedimento,
@@ -267,7 +267,11 @@ class AtendimentoController {
                 tipo_arquivo: tipoArquivo,
                 tamanho_arquivo: tamanhoArquivo,
                 data_foto: new Date()
-            });
+            };
+            if (procedimento_id) {
+                fotoData.procedimento_id = procedimento_id;
+            }
+            const foto = await FotoPaciente.create(fotoData);
             
             console.log('Foto salva com sucesso:', foto.id);
             
@@ -287,6 +291,14 @@ class AtendimentoController {
             res.json({ success: true, data: fotoResponse });
         } catch (error) {
             console.error('Erro ao salvar foto:', error);
+            // Erro de coluna inexistente (banco desatualizado)
+            const msg = typeof error?.message === 'string' ? error.message : '';
+            if (msg.includes("Unknown column 'procedimento_id'")) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Banco de dados desatualizado: coluna procedimento_id ausente em fotos_pacientes' 
+                });
+            }
             res.status(500).json({ success: false, message: 'Erro ao salvar foto' });
         }
     }
@@ -339,7 +351,7 @@ class AtendimentoController {
                         produto: foto.procedimento.produto ? {
                             id: foto.procedimento.produto.id,
                             nome: foto.procedimento.produto.nome,
-                            tipo: foto.procedimento.produto.tipo
+                            categoria: foto.procedimento.produto.categoria
                         } : null
                     };
                 }
@@ -471,7 +483,7 @@ class AtendimentoController {
             
             const medicamentos = await Produto.findAll({
                 where: {
-                    tipo: 'medicamento',
+                    categoria: 'medicamento',
                     status: 'ativo'
                 },
                 order: [['nome', 'ASC']]

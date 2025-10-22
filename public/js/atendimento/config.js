@@ -140,9 +140,26 @@ const Utils = {
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    // Extrair ID do paciente da URL
-    const urlParts = window.location.pathname.split('/');
-    currentPatientId = urlParts[urlParts.length - 1];
+    // Extrair ID do paciente de forma robusta, suportando rotas como /sistema/atendimento/:id e /sistema/atendimento/:id/<aba>
+    const path = window.location.pathname;
+    let id = null;
+
+    // Preferir regex para capturar /atendimento/<id>
+    const match = path.match(/\/atendimento\/(\d+)/);
+    if (match && match[1]) {
+        id = match[1];
+    } else {
+        // Fallback: verificar segmentos numéricos da URL
+        const parts = path.split('/').filter(Boolean);
+        const last = parts[parts.length - 1];
+        const prev = parts[parts.length - 2];
+        if (!isNaN(Number(last))) {
+            id = last;
+        } else if (!isNaN(Number(prev))) {
+            id = prev;
+        }
+    }
+    currentPatientId = id; // permanece null se não encontrado
     
     // Extrair nome do paciente do DOM
     const nameElement = document.getElementById('patientName');

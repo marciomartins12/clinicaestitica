@@ -5,15 +5,16 @@ class ProdutoController {
     // Buscar produtos com filtros
     static async buscarProdutos(req, res) {
         try {
-            const { categoria, busca, page = 1, limit = 50 } = req.query;
+            const { categoria, tipo, busca, page = 1, limit = 50 } = req.query;
             
             let whereClause = {
                 status: 'ativo'
             };
             
-            // Filtro por categoria
-            if (categoria) {
-                whereClause.categoria = categoria;
+            // Filtro por categoria (aceita alias 'tipo' para compatibilidade)
+            const categoriaParam = categoria || tipo;
+            if (categoriaParam) {
+                whereClause.categoria = categoriaParam;
             }
             
             // Filtro por busca (nome ou descrição)
@@ -88,6 +89,7 @@ class ProdutoController {
                 nome,
                 descricao,
                 categoria,
+                tipo,
                 preco,
                 duracao_minutos,
                 codigo,
@@ -101,8 +103,11 @@ class ProdutoController {
                 observacoes
             } = req.body;
             
+            // Resolver categoria (aceita alias 'tipo')
+            const categoriaResolved = categoria || tipo;
+            
             // Validações básicas
-            if (!nome || !categoria || !preco) {
+            if (!nome || !categoriaResolved || !preco) {
                 return res.status(400).json({
                     success: false,
                     message: 'Nome, categoria e preço são obrigatórios'
@@ -126,7 +131,7 @@ class ProdutoController {
             const novoProduto = await Produto.create({
                 nome,
                 descricao,
-                categoria,
+                categoria: categoriaResolved,
                 preco,
                 duracao_minutos,
                 codigo,
@@ -174,6 +179,7 @@ class ProdutoController {
                 nome,
                 descricao,
                 categoria,
+                tipo,
                 preco,
                 duracao_minutos,
                 codigo,
@@ -214,10 +220,13 @@ class ProdutoController {
                 }
             }
             
+            // Resolver categoria (aceita alias 'tipo')
+            const categoriaResolved = categoria || tipo;
+            
             await produto.update({
                 nome,
                 descricao,
-                categoria,
+                categoria: categoriaResolved ?? produto.categoria,
                 preco,
                 duracao_minutos,
                 codigo,

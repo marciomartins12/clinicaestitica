@@ -74,36 +74,36 @@
         <!-- Tabs Navigation -->
         <div class="tabs-container">
             <div class="tabs-nav">
-                <button class="tab-btn active" onclick="openTab(event, 'anamnese')">
+                <a class="tab-btn {{#if (eq activeTab 'anamnese')}}active{{/if}}" href="/sistema/atendimento/{{paciente.id}}/anamnese">
                     <i class="fas fa-clipboard-list"></i>
                     Anamnese
-                </button>
-                <button class="tab-btn" onclick="openTab(event, 'exames')">
+                </a>
+                <a class="tab-btn {{#if (eq activeTab 'exames')}}active{{/if}}" href="/sistema/atendimento/{{paciente.id}}/exames">
                     <i class="fas fa-vial"></i>
                     Exames
-                </button>
-                <button class="tab-btn" onclick="openTab(event, 'fotos')">
+                </a>
+                <a class="tab-btn {{#if (eq activeTab 'fotos')}}active{{/if}}" href="/sistema/atendimento/{{paciente.id}}/fotos">
                     <i class="fas fa-camera"></i>
                     Fotos
-                </button>
-                <button class="tab-btn" onclick="openTab(event, 'evolucao')">
+                </a>
+                <a class="tab-btn {{#if (eq activeTab 'evolucao')}}active{{/if}}" href="/sistema/atendimento/{{paciente.id}}/evolucao">
                     <i class="fas fa-chart-line"></i>
-                    Evolução
-                </button>
-                <button class="tab-btn" onclick="openTab(event, 'atestado')">
+                    Atendimentos
+                </a>
+                <a class="tab-btn {{#if (eq activeTab 'atestado')}}active{{/if}}" href="/sistema/atendimento/{{paciente.id}}/atestado">
                     <i class="fas fa-file-medical"></i>
                     Atestado
-                </button>
-                <button class="tab-btn" onclick="openTab(event, 'prescricao')">
+                </a>
+                <a class="tab-btn {{#if (eq activeTab 'prescricao')}}active{{/if}}" href="/sistema/atendimento/{{paciente.id}}/prescricao">
                     <i class="fas fa-prescription"></i>
                     Prescrição
-                </button>
+                </a>
             </div>
 
             <!-- Tab Contents -->
             <div class="tabs-content">
                 <!-- Anamnese Tab -->
-                <div id="anamnese" class="tab-content active">
+                <div id="anamnese" class="tab-content{{#if (eq activeTab 'anamnese')}} active{{/if}}">
                     <div class="content-header">
                         <h3><i class="fas fa-clipboard-list"></i> Anamnese</h3>
                         <div class="content-actions">
@@ -180,7 +180,7 @@
                 </div>
 
                 <!-- Atestado Tab -->
-                <div id="atestado" class="tab-content">
+                <div id="atestado" class="tab-content{{#if (eq activeTab 'atestado')}} active{{/if}}">
                     <div class="content-header">
                         <h3><i class="fas fa-file-medical"></i> Atestado Médico</h3>
                         <div class="content-actions">
@@ -244,7 +244,7 @@
                 </div>
 
                 <!-- Exames Tab -->
-                <div id="exames" class="tab-content">
+                <div id="exames" class="tab-content{{#if (eq activeTab 'exames')}} active{{/if}}">
                     <div class="content-header">
                         <h3><i class="fas fa-vial"></i> Exames</h3>
                         <div class="content-actions">
@@ -303,8 +303,8 @@
                                     <input type="text" id="laboratorioExame" class="form-input" placeholder="Nome do laboratório">
                                 </div>
                                 <div class="form-group">
-                                    <label>Médico Solicitante</label>
-                                    <input type="text" id="medicoSolicitante" class="form-input" placeholder="Nome do médico">
+                                    <label>Dr/Dra</label>
+                                    <input type="text" id="medicoSolicitante" class="form-input" value="{{user.nome}}" placeholder="Nome do solicitante" readonly>
                                 </div>
                                 <div class="form-group">
                                     <label>Observações</label>
@@ -393,7 +393,7 @@
                 </div>
 
                 <!-- Fotos Tab -->
-                <div id="fotos" class="tab-content">
+                <div id="fotos" class="tab-content{{#if (eq activeTab 'fotos')}} active{{/if}}">
                     <div class="content-header">
                         <h3><i class="fas fa-camera"></i> Fotos do Paciente</h3>
                         <div class="content-actions">
@@ -475,9 +475,17 @@
                 </div>
 
                 <!-- Histórico Tab -->
-                <div id="evolucao" class="tab-content">
+                <div id="evolucao" class="tab-content{{#if (eq activeTab 'evolucao')}} active{{/if}}">
                     <div class="content-header">
-                        <h3><i class="fas fa-chart-line"></i> Evolução do Paciente</h3>
+                        <h3><i class="fas fa-chart-line"></i> Atendimentos</h3>
+                        <div class="content-actions">
+                            {{#if (eq user.tipo_usuario 'profissional')}}
+                            <button class="btn btn-secondary" onclick="abrirModalNovoAtendimento()">
+                                <i class="fas fa-plus"></i>
+                                Novo Atendimento
+                            </button>
+                            {{/if}}
+                        </div>
                     </div>
                     
                     <div class="evolucao-filters">
@@ -498,7 +506,7 @@
                 </div>
 
                 <!-- Prescrição Tab -->
-                <div id="prescricao" class="tab-content">
+                <div id="prescricao" class="tab-content{{#if (eq activeTab 'prescricao')}} active{{/if}}">
                     <div class="content-header">
                         <h3><i class="fas fa-prescription"></i> Prescrição Médica</h3>
                         <div class="content-actions">
@@ -619,6 +627,8 @@ if (typeof currentPatientId === 'undefined') {
 let currentStream = null;
 let medicamentosDisponiveis = [];
 let currentUserId = {{user.id}}; // ID do usuário logado para controle de permissões
+let currentUserName = '{{user.nome}}'; // Nome do profissional solicitante
+let currentUserSpecialty = '{{user.especialidade}}'; // Especialidade do profissional solicitante
 // Variáveis do novo agendamento removidas
 
 // Tab functionality
@@ -666,6 +676,7 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarFotos();
     carregarExames();
     carregarAnamnese();
+    carregarProcedimentosFoto();
 });
 
 // Anamnese functions
@@ -964,6 +975,74 @@ function carregarFotos() {
         .catch(error => console.error('Erro ao carregar fotos:', error));
 }
 
+// Carregar agendamentos/procedimentos do paciente para a aba Fotos
+function carregarProcedimentosFoto() {
+    const select = document.getElementById('photoProcedure');
+    if (!select) return;
+
+    // Opção padrão de não vincular
+    select.innerHTML = '<option value="">Sem vínculo a procedimento</option>';
+
+    fetch(`/sistema/agendamentos?paciente_id=${currentPatientId}&limit=1000`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success || !Array.isArray(data.data)) {
+                console.error('Resposta inválida ao carregar agendamentos:', data);
+                return;
+            }
+
+            // Reset mantendo a opção de não vincular
+            select.innerHTML = '<option value="">Sem vínculo a procedimento</option>';
+
+            if (data.data.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Nenhum procedimento encontrado';
+                opt.disabled = true;
+                select.appendChild(opt);
+                return;
+            }
+
+            let addedCount = 0;
+            data.data.forEach(ag => {
+                // Ocultar agendamentos com status 'faltou'
+                if (ag.status && String(ag.status).toLowerCase() === 'faltou') {
+                    return; // pula este agendamento
+                }
+
+                const option = document.createElement('option');
+                option.value = ag.id; // ID do agendamento
+
+                const produtoNome = ag.produto && ag.produto.nome ? ag.produto.nome : 'Procedimento';
+                let texto = produtoNome;
+                if (ag.data_agendamento) {
+                    const dt = new Date(ag.data_agendamento);
+                    const dataStr = dt.toLocaleDateString('pt-BR');
+                    const horaStr = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    texto = `${dataStr} ${horaStr} - ${produtoNome}`;
+                }
+                if (ag.status) {
+                    texto += ` (${ag.status})`;
+                }
+
+                option.textContent = texto;
+                select.appendChild(option);
+                addedCount++;
+            });
+
+            if (addedCount === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Nenhum procedimento elegível';
+                opt.disabled = true;
+                select.appendChild(opt);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar procedimentos para fotos:', error);
+        });
+}
+
 function carregarExames() {
     fetch(`/sistema/atendimento/exames/${currentPatientId}`)
         .then(response => response.json())
@@ -1062,7 +1141,7 @@ document.getElementById('solicitarExameForm').addEventListener('submit', functio
         tipo_exame: document.getElementById('tipoExameSolicitar').value,
         data_exame: document.getElementById('dataExameSolicitar').value,
         laboratorio: document.getElementById('laboratorioExame').value,
-        medico_solicitante: document.getElementById('medicoSolicitante').value,
+        medico_solicitante: currentUserName,
         observacoes: document.getElementById('observacoesSolicitar').value,
         status: 'solicitado'
     };
@@ -1462,7 +1541,7 @@ function exibirEvolucao(agendamentos) {
             <tr>
                 <th>Data/Hora</th>
                 <th>Procedimento</th>
-                <th>Profissional</th>
+                <th>Dr/Dra</th>
                 <th>Valor</th>
                 <th>Status</th>
                 <th>Pagamento</th>
@@ -1806,7 +1885,7 @@ function mostrarModalDetalhes(agendamento) {
                      <h4 style="margin: 0 0 10px 0; color: #374151;">Informações Gerais</h4>
                      <div style="background: #f9fafb; padding: 15px; border-radius: 6px;">
                          <p><strong>Paciente:</strong> ${agendamento.paciente?.nome || 'N/A'}</p>
-                         <p><strong>Profissional:</strong> ${agendamento.profissional?.nome || agendamento.Usuario?.nome || 'N/A'}</p>
+                         <p><strong>Dr/Dra:</strong> ${agendamento.profissional?.nome || agendamento.Usuario?.nome || 'N/A'}</p>
                          <p><strong>Data:</strong> ${dataAgendamento.toLocaleDateString('pt-BR')}</p>
                          <p><strong>Horário:</strong> ${agendamento.horario || 'N/A'}</p>
                          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(agendamento.status)}">${getStatusText(agendamento.status)}</span></p>
@@ -2132,7 +2211,7 @@ function criarCardExame(exame) {
         <div class="exame-info">
             <p><i class="fas fa-calendar"></i> <strong>Data:</strong> ${new Date(exame.data_exame).toLocaleDateString('pt-BR')}</p>
             ${exame.laboratorio ? `<p><i class="fas fa-building"></i> <strong>Laboratório:</strong> ${exame.laboratorio}</p>` : ''}
-            ${exame.medico_solicitante ? `<p><i class="fas fa-user-md"></i> <strong>Médico:</strong> ${exame.medico_solicitante}</p>` : ''}
+            ${exame.medico_solicitante ? `<p><i class=\"fas fa-user-md\"></i> <strong>Dr/Dra:</strong> ${exame.medico_solicitante}</p>` : ''}
             ${exame.observacoes ? `<p><i class="fas fa-comment"></i> <strong>Observações:</strong> ${exame.observacoes}</p>` : ''}
         </div>
         ${resultadosHtml}

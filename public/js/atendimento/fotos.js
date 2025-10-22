@@ -467,12 +467,17 @@ const FotoManager = {
      * Preview da imagem selecionada
      */
     previewImage: function(input) {
-        if (input.files && input.files[0]) {
+        if (input && input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('imagePreview');
-                if (preview) {
-                    preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 4px;">`;
+            reader.onload = (e) => {
+                const img = document.getElementById('photoPreview');
+                if (img) {
+                    img.src = e.target.result;
+                }
+                // Mostrar o formulário de foto ao selecionar uma imagem
+                const form = document.getElementById('photoForm');
+                if (form) {
+                    form.style.display = 'block';
                 }
             };
             reader.readAsDataURL(input.files[0]);
